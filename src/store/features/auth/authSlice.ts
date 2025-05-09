@@ -22,18 +22,25 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addMatcher(authApi.endpoints.login.matchFulfilled, (state, { payload }) => {
-        state.user = payload.user;
-        state.token = payload.token;
-        state.isAuthenticated = true;
-        localStorage.setItem('token', payload.token);
-      })
-      .addMatcher(authApi.endpoints.register.matchFulfilled, (state, { payload }) => {
-        state.user = payload.user;
-        state.token = payload.token;
-        state.isAuthenticated = true;
-        localStorage.setItem('token', payload.token);
-      });
+      .addMatcher(
+        authApi.endpoints.login.matchFulfilled,
+        (state, { payload }) => {
+          state.user = payload.data.active_role;
+          state.token = payload.data.access;
+          state.isAuthenticated = true;
+          localStorage.setItem('token', payload.data.access);
+        },
+      )
+      .addMatcher(
+        authApi.endpoints.register.matchFulfilled,
+        (state, { payload }) => {
+          console.log('🚀 ~ payload:', payload);
+          state.user = payload.user;
+          state.token = payload.token;
+          state.isAuthenticated = true;
+          localStorage.setItem('token', payload.data.access);
+        },
+      );
   },
 });
 

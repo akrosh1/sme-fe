@@ -6,9 +6,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { useAppDispatch } from '@/hooks/use-dispatch';
+import { useAppDispatch } from '@/hooks/useDispatch';
 import { logout } from '@/store/features/auth/authSlice';
-import { Bell, Settings } from 'lucide-react';
+import { Bell, LogOutIcon, Settings, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -46,18 +46,21 @@ export function Header() {
               </PopoverTrigger>
               <PopoverContent>
                 <div className="flex flex-col p-4 space-y-2">
-                  <Link href="/settings">
-                    <Button variant="outline" className="w-full">
-                      Profile
-                    </Button>
+                  <Link href="/profile" className="flex items-center gap-2">
+                    <User size={16} />
+                    Profile
                   </Link>
-                  <Button
-                    variant="destructive"
-                    className="w-full"
+                  <Link href="/setting" className="flex items-center gap-2">
+                    <Settings size={16} /> 
+                    Setting
+                  </Link>
+                  <div
+                    className="flex items-center gap-2"
                     onClick={handleLogout}
                   >
+                    <LogOutIcon size={16} />
                     Logout
-                  </Button>
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>
