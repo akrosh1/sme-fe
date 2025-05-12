@@ -1,10 +1,5 @@
-import DashboardComponent from '@/components/dashboard';
+import { HomeSection } from '@/components/hero';
 
 export default function Home() {
-  return (
-    // <div className="flex justify-center items-center h-full w-full">
-    //   <h1>Hello</h1>
-    // </div>
-    <DashboardComponent />
-  );
+  return <HomeSection />;
 }
