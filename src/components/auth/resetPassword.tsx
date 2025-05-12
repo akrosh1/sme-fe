@@ -31,18 +31,24 @@ export function ResetPasswordForm({
     confirmPassword: string;
   }>();
 
-  const onSubmit = async (data: { password: string }) => {
+  const onSubmit = async (data: { password: string; old_password: string }) => {
     // if (!token) {
     //   toast.error('Invalid reset token');
     //   return;
     // }
 
     try {
-      await resetPassword({ token, newPassword: data.password }).unwrap();
+      await resetPassword({
+        old_passworsd: data.old_password,
+        password: data.password,
+      }).unwrap();
       toast.success('Password reset successfully!');
       router.push('/login');
     } catch (error) {
-      toast.error('Failed to reset password. The link may have expired.');
+      toast.error(
+        error?.data?.error?.details ||
+          ' Failed to reset password. The link may have expired.',
+      );
     }
   };
 

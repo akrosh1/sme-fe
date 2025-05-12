@@ -9,7 +9,7 @@ import {
 import { useAppDispatch } from '@/hooks/useDispatch';
 import { useIsMobile } from '@/hooks/useMobile';
 import { logout } from '@/store/slices/authSlice';
-import { Bell, LogOutIcon, Menu, Settings, User } from 'lucide-react';
+import { Bell, LogOutIcon, Settings, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -28,20 +28,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
-        {isMobile && (
-          <button
-            // onClick={toggleSidebar}
-            className="fixed top-4 left-4 z-50 rounded p-2 bg-[#2A3F54] text-white"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-        )}
-        <div className="mr-4 hidden md:flex">
-          <Link className="mr-6 flex items-center space-x-2" href="/">
-            <span className="hidden font-bold sm:inline-block"></span>
-          </Link>
-        </div>
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+        <div className="flex flex-1 items-center  space-x-2 justify-end">
           <nav className="flex items-center">
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
@@ -54,18 +41,24 @@ export function Header() {
                   <span className="sr-only">Settings</span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent>
-                <div className="flex flex-col p-4 space-y-2">
-                  <Link href="/profile" className="flex items-center gap-2">
+              <PopoverContent className="bg-white p-3 border-none">
+                <div className="flex flex-col p-2 space-y-2">
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-2 py-1 px-3 rounded hover:bg-gray-200 cursor-pointer"
+                  >
                     <User size={16} />
                     Profile
                   </Link>
-                  <Link href="/setting" className="flex items-center gap-2">
+                  <Link
+                    href="/setting"
+                    className="flex items-center gap-2 py-1 px-3 rounded hover:bg-gray-200 cursor-pointer"
+                  >
                     <Settings size={16} />
                     Setting
                   </Link>
                   <div
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 py-1 px-3 rounded hover:bg-red-200 cursor-pointer"
                     onClick={handleLogout}
                   >
                     <LogOutIcon size={16} />

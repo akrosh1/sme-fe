@@ -33,7 +33,10 @@ export function ForgotPasswordForm({
       toast.success('Password reset link sent to your email!');
       router.push('/login');
     } catch (error) {
-      toast.error('Failed to send reset link. Please try again.');
+      toast.error(
+        error?.data?.error?.details ||
+          'Failed to send reset link. Please try again.',
+      );
     }
   };
 
