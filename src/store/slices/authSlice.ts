@@ -1,5 +1,5 @@
+import { authApi } from '@/api/auth/authApi';
 import { createSlice } from '@reduxjs/toolkit';
-import { authApi } from './authApi';
 
 const initialState = {
   user: null,
@@ -29,6 +29,7 @@ const authSlice = createSlice({
           state.token = payload.data.access;
           state.isAuthenticated = true;
           localStorage.setItem('token', payload.data.access);
+          localStorage.setItem('refresh', payload.data.refresh);
         },
       )
       .addMatcher(

@@ -14,7 +14,6 @@ import {
 } from '@tanstack/react-table';
 import * as React from 'react';
 
-import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -118,7 +117,7 @@ export function DataTable<TData>({
   });
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn('space-y-4 w-full', className)}>
       <DataTableToolbar
         table={table}
         filters={filters}
@@ -127,74 +126,67 @@ export function DataTable<TData>({
       >
         {headerControls}
       </DataTableToolbar>
-      <Card className="overflow-hidden">
-        <ScrollArea className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder ? null : (
-                        <DataTableColumnHeader
-                          header={header}
-                          table={table}
-                          onFilterChange={onFilterChange}
-                          filters={filters}
-                        />
+      <ScrollArea className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder ? null : (
+                      <DataTableColumnHeader header={header} />
+                    )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <TableRow key={`skeleton-${index}`}>
+                  {Array.from({ length: columns.length }).map(
+                    (_, cellIndex) => (
+                      <TableCell key={`skeleton-cell-${cellIndex}`}>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                    ),
+                  )}
+                </TableRow>
+              ))
+            ) : table.getRowModel().rows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-96 text-center"
+                >
+                  <DataTableNoResults>{noResults}</DataTableNoResults>
+                </TableCell>
+              </TableRow>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && 'selected'}
+                  {...(rowProps ? rowProps(row) : {})}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
                       )}
-                    </TableHead>
+                    </TableCell>
                   ))}
                 </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                Array.from({ length: 5 }).map((_, index) => (
-                  <TableRow key={`skeleton-${index}`}>
-                    {Array.from({ length: columns.length }).map(
-                      (_, cellIndex) => (
-                        <TableCell key={`skeleton-cell-${cellIndex}`}>
-                          <Skeleton className="h-6 w-full" />
-                        </TableCell>
-                      ),
-                    )}
-                  </TableRow>
-                ))
-              ) : table.getRowModel().rows.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-96 text-center"
-                  >
-                    <DataTableNoResults>{noResults}</DataTableNoResults>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && 'selected'}
-                    {...(rowProps ? rowProps(row) : {})}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </ScrollArea>
-        {pagination && table.getPageCount() > 1 && (
-          <DataTablePagination table={table} />
-        )}
-      </Card>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </ScrollArea>
+      {pagination && table.getPageCount() > 1 && (
+        <DataTablePagination table={table} />
+      )}
     </div>
   );
 }

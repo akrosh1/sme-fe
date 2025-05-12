@@ -89,11 +89,11 @@ export function Sidebar() {
   return (
     <div
       className={cn(
-        'bg-[#2A3F54] text-white transition-all duration-300 h-screen overflow-y-auto flex flex-col',
+        'bg-primary text-white transition-all duration-300 h-screen overflow-y-auto flex flex-col',
         sidebarOpen ? 'w-64' : 'w-16',
       )}
     >
-      <div className="flex h-14 items-center justify-between px-4 sticky top-0 bg-[#2A3F54] z-10">
+      <div className="flex h-14 items-center justify-between px-4 sticky top-0 bg-primary z-10">
         {sidebarOpen && (
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full bg-white/10" />
@@ -158,7 +158,7 @@ export function Sidebar() {
       </div>
 
       {sidebarOpen && (
-        <div className="sticky bottom-0 p-4 bg-[#2A3F54] border-t border-white/10">
+        <div className="sticky bottom-0 p-4 bg-primary border-t border-white/10">
           <div className="flex items-center gap-2">
             <HelpCircle className="h-5 w-5 text-gray-400" />
             <span className="text-sm text-gray-400">Support</span>

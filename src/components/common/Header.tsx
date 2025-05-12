@@ -7,7 +7,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useAppDispatch } from '@/hooks/useDispatch';
-import { logout } from '@/store/features/auth/authSlice';
+import { logout } from '@/store/slices/authSlice';
 import { Bell, LogOutIcon, Settings, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -51,7 +51,7 @@ export function Header() {
                     Profile
                   </Link>
                   <Link href="/setting" className="flex items-center gap-2">
-                    <Settings size={16} /> 
+                    <Settings size={16} />
                     Setting
                   </Link>
                   <div

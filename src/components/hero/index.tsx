@@ -1,7 +1,7 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import type { ColumnDef } from '@tanstack/react-table';
-import { CalendarIcon, DownloadIcon, Play } from 'lucide-react';
+import { CalendarIcon, DownloadIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { DataTable } from '../common/table';
 import { Badge } from '../ui/badge';
@@ -118,23 +118,18 @@ export function HomeSection() {
 
   // Handle filter changes
   const handleFilterChange = (newFilters: Record<string, any>) => {
-    // Check if filters have actually changed
     const hasChanged =
       Object.keys(newFilters).some((key) => filters[key] !== newFilters[key]) ||
       Object.keys(filters).some((key) => !newFilters.hasOwnProperty(key));
 
     if (hasChanged) {
       setFilters(newFilters);
-      // Only reset pagination if filters changed
       setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     }
   };
 
-  // Memoize filtered and sorted data to prevent recalculations on every render
   const { paginatedData, filteredDataLength } = useMemo(() => {
-    // Apply filters
     const filteredData = data.filter((item) => {
-      // Apply filters
       for (const [key, value] of Object.entries(filters)) {
         if (!value) continue;
 
@@ -164,7 +159,6 @@ export function HomeSection() {
       return true;
     });
 
-    // Apply sorting
     const sortedData = [...filteredData].sort((a, b) => {
       for (const sort of sorting) {
         const key = sort.id as keyof Payment;
@@ -179,7 +173,6 @@ export function HomeSection() {
       return 0;
     });
 
-    // Apply pagination
     const paginatedData = sortedData.slice(
       pagination.pageIndex * pagination.pageSize,
       (pagination.pageIndex + 1) * pagination.pageSize,
@@ -191,7 +184,7 @@ export function HomeSection() {
   return (
     <main>
       <PublicHeader />
-      <section className="relative min-h-screen pt-32 pb-16 overflow-hidden bg-black">
+      <section className="relative min-h-screen pt-32 pb-16 overflow-hidden bg-background">
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
             Protect Your Privacy, Share What
@@ -203,7 +196,7 @@ export function HomeSection() {
             calls. Keep your focus on what you want to share while maintaining
             full control over your privacy.
           </p>
-          <div className="flex gap-4 justify-center">
+          {/* <div className="flex gap-4 justify-center">
             <Button
               variant="outline"
               className="gap-2 border-white/10 bg-white/5 hover:bg-white/10"
@@ -217,71 +210,41 @@ export function HomeSection() {
             >
               Download
             </Button>
-          </div>
+          </div> */}
         </div>
         <div className="relative">
-          {/* <Image
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Hero%20image.jpg-mE5vAT4d864MlVhdkcrk1Vn2WcNONq.jpeg"
-            alt="Background Gradient"
-            width={1920}
-            height={1080}
-            className="w-full h-auto"
-            priority
-          /> */}
-          <div className="absolute inset-0 flex items-end justify-center pb-16">
-            <div className="bg-black/20 backdrop-blur-sm p-4 rounded-xl w-[90%] h-[70%] flex">
-              <DataTable
-                data={paginatedData}
-                columns={columns}
-                pagination={{
-                  state: pagination,
-                  onPaginationChange: setPagination,
-                  rowCount: filteredDataLength,
-                }}
-                sorting={{
-                  state: sorting,
-                  onSortingChange: setSorting,
-                }}
-                columnVisibility={{
-                  state: columnVisibility,
-                  onColumnVisibilityChange: setColumnVisibility,
-                }}
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                headerControls={
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      Filter by date
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <DownloadIcon className="mr-2 h-4 w-4" />
-                      Export
-                    </Button>
-                  </div>
-                }
-              />
-              {/* <div className="flex-1 pr-2">
-                <Image
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Browser-HZNDOssbyLixIa4lABR27yelWXveQ0.png"
-                  alt="Browser Preview"
-                  width={800}
-                  height={600}
-                  className="w-full h-full object-cover rounded-lg"
-                  priority
-                />
-              </div>
-              <div className="flex-1 pl-2">
-                <Image
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Editor%20Window-sJ4sXlXpgDhv7gLvQylqH5VTb3L0rc.png"
-                  alt="Code Editor"
-                  width={800}
-                  height={600}
-                  className="w-full h-full object-cover rounded-lg"
-                  priority
-                />
-              </div> */}
-            </div>
+          <div className="bg-background/20 backdrop-blur-sm p-4 rounded-xl w-[90%] mx-auto h-[70%] flex">
+            <DataTable
+              data={paginatedData}
+              columns={columns}
+              pagination={{
+                state: pagination,
+                onPaginationChange: setPagination,
+                rowCount: filteredDataLength,
+              }}
+              sorting={{
+                state: sorting,
+                onSortingChange: setSorting,
+              }}
+              columnVisibility={{
+                state: columnVisibility,
+                onColumnVisibilityChange: setColumnVisibility,
+              }}
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              headerControls={
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    Filter by date
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <DownloadIcon className="mr-2 h-4 w-4" />
+                    Export
+                  </Button>
+                </div>
+              }
+            />
           </div>
         </div>
       </section>

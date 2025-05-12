@@ -1,20 +1,29 @@
 'use client';
 
-import { cn } from '@/lib/utils';
+import { useRegisterMutation } from '@/api/auth/authApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useForm } from 'react-hook-form';
+import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import registerImg from '../../../public/assets/signup.svg';
+
+interface SignUpFormInputs {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
 
 export function RegisterForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
   const router = useRouter();
+  const [signUp, { isLoading }] = useRegisterMutation();
   const {
     register,
     handleSubmit,
@@ -23,23 +32,14 @@ export function RegisterForm({
   } = useForm();
   console.log('🚀 ~ getValues:', getValues);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: SignUpFormInputs) => {
     try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (res.ok) {
-        toast.success('Account created successfully!');
-        router.push('/login');
-      } else {
-        const error = await res.json();
-        toast.error(error.message || 'Something went wrong');
-      }
-    } catch (err) {
-      toast.error('An unexpected error occurred');
+      const res = await signUp(data).unwrap();
+      console.log('🚀 ~ onSubmit ~ res:', res);
+      toast.success('Registered in successfully!');
+      router.push('/login');
+    } catch (error) {
+      toast.error('Invalid credentials. Please try again.');
     }
   };
 
@@ -91,15 +91,17 @@ export function RegisterForm({
                 )}
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="re_password">Re-Password</Label>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <Input
-                  id="re_password"
+                  id="confirmPassword"
                   type="password"
                   placeholder="••••••••"
-                  {...register('re_password', { required: true })}
+                  {...register('confirmPassword', { required: true })}
                 />
                 {errors.password && (
-                  <p className="text-sm text-red-500"> is required</p>
+                  <p className="text-sm text-red-500">
+                    Confirm Passwordis required
+                  </p>
                 )}
               </div>
               <Button type="submit" className="w-full">
