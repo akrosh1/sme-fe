@@ -13,7 +13,7 @@ import registerImg from '../../../public/assets/signup.svg';
 
 interface SignUpFormInputs {
   first_name: string;
-  middle_name: string;
+  middle_name?: string;
   last_name: string;
   email: string;
   password: string;
@@ -29,15 +29,12 @@ export function RegisterForm({
   const {
     register,
     handleSubmit,
-    getValues,
     formState: { errors },
   } = useForm();
-  console.log('🚀 ~ getValues:', getValues);
 
   const onSubmit = async (data: SignUpFormInputs) => {
     try {
       const res = await signUp(data).unwrap();
-      console.log('🚀 ~ onSubmit ~ res:', res);
       toast.success('Registered in successfully!');
       router.push('/login');
     } catch (error) {
@@ -58,7 +55,7 @@ export function RegisterForm({
                 </p>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="first_name">Name</Label>
+                <Label htmlFor="first_name">First Name</Label>
                 <Input
                   id="first_name"
                   placeholder="John"
@@ -69,7 +66,7 @@ export function RegisterForm({
                 )}
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="last_name">Name</Label>
+                <Label htmlFor="last_name">Last Name</Label>
                 <Input
                   id="last_name"
                   placeholder="Doe"

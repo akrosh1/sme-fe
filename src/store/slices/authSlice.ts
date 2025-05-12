@@ -39,7 +39,6 @@ const authSlice = createSlice({
           state.user = payload.user;
           state.token = payload.token;
           state.isAuthenticated = true;
-          localStorage.setItem('token', payload.data.access);
         },
       );
   },

@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -8,35 +8,35 @@
   --color-foreground: #444444;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --color-sidebar-ring: #608BC1;
-  --color-sidebar-border: #133E87;
-  --color-sidebar-accent-foreground: #133E87;
-  --color-sidebar-accent: #608BC1;
-  --color-sidebar-primary-foreground: #F3F3E0;
-  --color-sidebar-primary: #133E87;
-  --color-sidebar-foreground: #133E87;
-  --color-sidebar: #F3F3E0;
-  --color-chart-5: #133E87;
-  --color-chart-4: #608BC1;
-  --color-chart-3: #CBDCEB;
-  --color-chart-2: #608BC1;
-  --color-chart-1: #F3F3E0;
-  --color-ring: #608BC1;
-  --color-input: #CBDCEB;
-  --color-border: #133E87;
-  --color-destructive: #133E87;
-  --color-accent-foreground: #133E87;
-  --color-accent: #608BC1;
+  --color-sidebar-ring: #608bc1;
+  --color-sidebar-border: #133e87;
+  --color-sidebar-accent-foreground: #133e87;
+  --color-sidebar-accent: #608bc1;
+  --color-sidebar-primary-foreground: #f3f3e0;
+  --color-sidebar-primary: #133e87;
+  --color-sidebar-foreground: #133e87;
+  --color-sidebar: #f3f3e0;
+  --color-chart-5: #133e87;
+  --color-chart-4: #608bc1;
+  --color-chart-3: #cbdceb;
+  --color-chart-2: #608bc1;
+  --color-chart-1: #f3f3e0;
+  --color-ring: #608bc1;
+  --color-input: #cbdceb;
+  --color-border: #133e87;
+  --color-destructive: #133e87;
+  --color-accent-foreground: #133e87;
+  --color-accent: #608bc1;
   --color-muted-foreground: #777;
-  --color-muted: #CBDCEB;
-  --color-secondary-foreground: #133E87;
-  --color-secondary: #CBDCEB;
-  --color-primary-foreground: #F3F3E0;
-  --color-primary: #133E87;
-  --color-popover-foreground: #133E87;
-  --color-popover: #CBDCEB;
-  --color-card-foreground: #133E87;
-  --color-card: #F2F9FF;
+  --color-muted: #cbdceb;
+  --color-secondary-foreground: #133e87;
+  --color-secondary: #cbdceb;
+  --color-primary-foreground: #f3f3e0;
+  --color-primary: #133e87;
+  --color-popover-foreground: #133e87;
+  --color-popover: #cbdceb;
+  --color-card-foreground: #133e87;
+  --color-card: #f2f9ff;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -48,37 +48,37 @@
 }
 
 .dark {
-  --background: #133E87;
-  --foreground: #F3F3E0;
-  --card: #133E87;
-  --card-foreground: #F3F3E0;
-  --popover: #133E87;
-  --popover-foreground: #F3F3E0;
-  --primary: #608BC1;
-  --primary-foreground: #F3F3E0;
-  --secondary: #CBDCEB;
-  --secondary-foreground: #133E87;
+  --background: #133e87;
+  --foreground: #f3f3e0;
+  --card: #133e87;
+  --card-foreground: #f3f3e0;
+  --popover: #133e87;
+  --popover-foreground: #f3f3e0;
+  --primary: #608bc1;
+  --primary-foreground: #f3f3e0;
+  --secondary: #cbdceb;
+  --secondary-foreground: #133e87;
   --muted: #f7fbff;
-  --muted-foreground: #133E87;
-  --accent: #608BC1;
-  --accent-foreground: #F3F3E0;
-  --destructive: #133E87;
-  --border: #F3F3E0;
-  --input: #CBDCEB;
-  --ring: #608BC1;
-  --chart-1: #CBDCEB;
-  --chart-2: #608BC1;
-  --chart-3: #133E87;
-  --chart-4: #CBDCEB;
-  --chart-5: #133E87;
-  --sidebar: #133E87;
-  --sidebar-foreground: #F3F3E0;
-  --sidebar-primary: #608BC1;
-  --sidebar-primary-foreground: #F3F3E0;
-  --sidebar-accent: #CBDCEB;
-  --sidebar-accent-foreground: #133E87;
-  --sidebar-border: #F3F3E0;
-  --sidebar-ring: #608BC1;
+  --muted-foreground: #133e87;
+  --accent: #608bc1;
+  --accent-foreground: #f3f3e0;
+  --destructive: #133e87;
+  --border: #f3f3e0;
+  --input: #cbdceb;
+  --ring: #608bc1;
+  --chart-1: #cbdceb;
+  --chart-2: #608bc1;
+  --chart-3: #133e87;
+  --chart-4: #cbdceb;
+  --chart-5: #133e87;
+  --sidebar: #133e87;
+  --sidebar-foreground: #f3f3e0;
+  --sidebar-primary: #608bc1;
+  --sidebar-primary-foreground: #f3f3e0;
+  --sidebar-accent: #cbdceb;
+  --sidebar-accent-foreground: #133e87;
+  --sidebar-border: #f3f3e0;
+  --sidebar-ring: #608bc1;
 }
 
 @layer base {
@@ -87,5 +87,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    height: 100vh;
+    overflow: hidden;
   }
 }

@@ -7,13 +7,15 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useAppDispatch } from '@/hooks/useDispatch';
+import { useIsMobile } from '@/hooks/useMobile';
 import { logout } from '@/store/slices/authSlice';
-import { Bell, LogOutIcon, Settings, User } from 'lucide-react';
+import { Bell, LogOutIcon, Menu, Settings, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export function Header() {
   const dispatch = useAppDispatch();
+  const isMobile = useIsMobile();
   const router = useRouter();
 
   const handleLogout = () => {
@@ -26,6 +28,14 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
+        {isMobile && (
+          <button
+            // onClick={toggleSidebar}
+            className="fixed top-4 left-4 z-50 rounded p-2 bg-[#2A3F54] text-white"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
         <div className="mr-4 hidden md:flex">
           <Link className="mr-6 flex items-center space-x-2" href="/">
             <span className="hidden font-bold sm:inline-block"></span>
