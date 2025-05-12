@@ -12,7 +12,9 @@ import { toast } from 'sonner';
 import registerImg from '../../../public/assets/signup.svg';
 
 interface SignUpFormInputs {
-  name: string;
+  first_name: string;
+  middle_name: string;
+  last_name: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -56,14 +58,25 @@ export function RegisterForm({
                 </p>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="first_name">Name</Label>
                 <Input
-                  id="name"
-                  placeholder="John Doe"
-                  {...register('name', { required: true })}
+                  id="first_name"
+                  placeholder="John"
+                  {...register('first_name', { required: true })}
                 />
                 {errors.name && (
-                  <p className="text-sm text-red-500">Name is required</p>
+                  <p className="text-sm text-red-500">First Name is required</p>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="last_name">Name</Label>
+                <Input
+                  id="last_name"
+                  placeholder="Doe"
+                  {...register('last_name', { required: true })}
+                />
+                {errors.name && (
+                  <p className="text-sm text-red-500">Last Name is required</p>
                 )}
               </div>
               <div className="grid gap-2">
