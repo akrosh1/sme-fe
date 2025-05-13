@@ -3,8 +3,10 @@ import { Button } from '@/components/ui/button';
 import type { ColumnDef } from '@tanstack/react-table';
 import { CalendarIcon, DownloadIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import Footer from '../common/Footer';
 import { DataTable } from '../common/table';
 import { Badge } from '../ui/badge';
+import FeaturesSection from './featureSection';
 import { PublicHeader } from './publicHeader';
 
 // Example data type
@@ -182,72 +184,61 @@ export function HomeSection() {
   }, [data, filters, sorting, pagination.pageIndex, pagination.pageSize]);
 
   return (
-    <main>
+    <>
       <PublicHeader />
-      <section className="relative min-h-screen pt-32 pb-16 overflow-hidden bg-background">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
-            Protect Your Privacy, Share What
-            <br />
-            Matters
-          </h1>
-          <p className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
-            Easily crop out sensitive information on your screen during work
-            calls. Keep your focus on what you want to share while maintaining
-            full control over your privacy.
-          </p>
-          {/* <div className="flex gap-4 justify-center">
-            <Button
-              variant="outline"
-              className="gap-2 border-white/10 bg-white/5 hover:bg-white/10"
-            >
-              <Play className="w-4 h-4" />
-              Demo
-            </Button>
-            <Button
-              variant="secondary"
-              className="bg-white text-black hover:bg-gray-100"
-            >
-              Download
-            </Button>
-          </div> */}
-        </div>
-        <div className="relative">
-          <div className="bg-background/20 backdrop-blur-sm p-4 rounded-xl w-[90%] mx-auto h-[70%] flex">
-            <DataTable
-              data={paginatedData}
-              columns={columns}
-              pagination={{
-                state: pagination,
-                onPaginationChange: setPagination,
-                rowCount: filteredDataLength,
-              }}
-              sorting={{
-                state: sorting,
-                onSortingChange: setSorting,
-              }}
-              columnVisibility={{
-                state: columnVisibility,
-                onColumnVisibilityChange: setColumnVisibility,
-              }}
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              headerControls={
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    Filter by date
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <DownloadIcon className="mr-2 h-4 w-4" />
-                    Export
-                  </Button>
-                </div>
-              }
-            />
+      <main>
+        <section className="relative min-h-screen pt-32 pb-16 overflow-y-auto bg-background">
+          <div className="text-center mb-16">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
+              Protect Your Privacy, Share What
+              <br />
+              Matters
+            </h1>
+            <p className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
+              Easily crop out sensitive information on your screen during work
+              calls. Keep your focus on what you want to share while maintaining
+              full control over your privacy.
+            </p>
           </div>
-        </div>
-      </section>
-    </main>
+          <FeaturesSection />
+          <div className="relative">
+            <div className="bg-background/20 backdrop-blur-sm p-4 rounded-xl w-[90%] mx-auto h-[70%] flex  pt-9 md:pt-15">
+              <DataTable
+                data={paginatedData}
+                columns={columns}
+                pagination={{
+                  state: pagination,
+                  onPaginationChange: setPagination,
+                  rowCount: filteredDataLength,
+                }}
+                sorting={{
+                  state: sorting,
+                  onSortingChange: setSorting,
+                }}
+                columnVisibility={{
+                  state: columnVisibility,
+                  onColumnVisibilityChange: setColumnVisibility,
+                }}
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                headerControls={
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      Filter by date
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <DownloadIcon className="mr-2 h-4 w-4" />
+                      Export
+                    </Button>
+                  </div>
+                }
+              />
+            </div>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </>
   );
 }
