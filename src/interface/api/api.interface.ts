@@ -15,6 +15,7 @@ export interface IResponse<TD> {
   data: TD;
   message: string;
   error: IResponseError | null;
+  status?: number;
 }
 
 export interface IResponseError extends Record<string, unknown> {

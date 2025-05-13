@@ -48,7 +48,7 @@ const menuGroups: MenuGroup[] = [
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const isMobile = useIsMobile();
   const pathname = usePathname();
 

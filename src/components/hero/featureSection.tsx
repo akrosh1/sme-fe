@@ -72,7 +72,7 @@ export default function FeaturesSection() {
 
   return (
     <section
-      className="py-20 bg-white dark:bg-muted/10 "
+      className="py-20 bg-white dark:bg-muted/10"
       id="features"
       aria-labelledby="features-heading"
     >

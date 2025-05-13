@@ -2,12 +2,11 @@
 
 import { Header } from '@/components/common/Header';
 import { Sidebar } from '@/components/common/Sidebar';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
-export default function DashboardLayout({
+export default function UsersLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -26,12 +25,12 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex">
+    <div className="flex overflow-hidden h-screen">
       <Sidebar />
-      <ScrollArea className="h-svh w-full overflow-hidden">
+      <div className="flex-1 flex flex-col h-[calc(100vh)] overflow-hidden">
         <Header />
-        <main className="flex-1 p-4 pb-5>">{children}</main>
-      </ScrollArea>
+        <main className="flex-1 p-4 pb-10>">{children}</main>
+      </div>
     </div>
   );
 }
