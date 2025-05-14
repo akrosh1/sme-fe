@@ -1,10 +1,19 @@
+import { ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
+import NotFoundImg from '../../public/assets/404.svg';
 
 export default function Component() {
   return (
     <div className="flex items-center min-h-screen px-4 py-12 sm:px-6 md:px-8 lg:px-12 xl:px-16">
       <div className="w-full space-y-6 text-center">
         <div className="space-y-3">
+          <Image
+            src={NotFoundImg.src}
+            height={200}
+            width={200}
+            alt="404 Page Not Found"
+          />
           <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl">
             404 Page Not Found
           </h1>
@@ -13,10 +22,11 @@ export default function Component() {
           </p>
         </div>
         <Link
-          href="#"
-          className="inline-flex h-10 items-center rounded-md border border-gray-200  bg-white shadow-sm px-8 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900  dark:bg-gray-950 dark:hover:bg-gray-800 dark:hover:text-gray-50 dark:focus-visible:ring-gray-300"
+          href="/dashboard"
+          className="inline-flex h-10 items-center rounded-md text-white  bg-primary shadow-sm px-8 text-sm font-medium transition-colors hover:bg-primary/90"
           prefetch={false}
         >
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Return to website
         </Link>
       </div>

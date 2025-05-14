@@ -1,199 +1,263 @@
 'use client';
 
-import { useIsMobile } from '@/hooks/useMobile';
-import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 import {
-  ChevronDown,
+  Building,
+  ChevronLeft,
   ChevronRight,
-  Database,
-  HelpCircle,
-  Menu,
-  Search,
+  Home,
+  HomeIcon,
+  SettingsIcon,
   Users,
 } from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-interface MenuItem {
-  name: string;
-  href: string;
-  items?: MenuItem[];
-}
-
-interface MenuGroup {
-  title: string;
+// Define types for sidebar items
+type SidebarItem = {
+  label: string;
   icon: React.ReactNode;
-  items?: MenuItem[];
   link?: string;
-}
+  dropdownItems?: SidebarItem[];
+  subItems?: SidebarItem[];
+};
 
-const menuGroups: MenuGroup[] = [
-  {
-    title: 'Dashboard',
-    icon: <Database className="h-5 w-5" />,
-    link: '/dashboard',
-  },
-  {
-    title: 'Queries',
-    icon: <Search className="h-5 w-5" />,
-    items: [{ name: 'Queries', href: '/queries' }],
-  },
-  {
-    title: 'Users',
-    icon: <Users className="h-5 w-5" />,
-    link: '/users',
-  },
-];
+type DisplaySidebarListItemsProps = {
+  items: SidebarItem[];
+  className?: string;
+  selectedItem: string;
+  onItemClick: (label: string) => void;
+  isCollapsed: boolean;
+  type?: 'sidebar';
+};
 
-export function Sidebar() {
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const isMobile = useIsMobile();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
-  }, [pathname, isMobile]);
-
-  const toggleGroup = (path: string) => {
-    setCollapsed((prev) => ({ ...prev, [path]: !prev[path] }));
-  };
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  const isActive = (href: string) => pathname === href;
-
-  const renderMenuItem = (item: MenuItem, depth = 0) => {
-    const hasChildren = item.items && item.items.length > 0;
-    const isGroupCollapsed = collapsed[item.href];
-    const paddingLeft = `${depth * 16 + 16}px`;
+// Memoize the list item component to prevent unnecessary re-renders
+const DisplaySidebarListItems = React.memo(
+  ({
+    items,
+    className,
+    selectedItem,
+    onItemClick,
+    isCollapsed,
+    type,
+  }: DisplaySidebarListItemsProps) => {
+    const isNotCollapsedAndSidebar = !isCollapsed || type;
 
     return (
-      <div key={item.href} style={{ paddingLeft }}>
-        <Link
-          href={item.href}
-          className={cn(
-            'flex items-center gap-2 py-2 px-4 hover:bg-white/5 cursor-pointer',
-            isActive(item.href) && 'bg-white/10 font-medium',
-          )}
+      <div className={className}>
+        {items.map((item) => (
+          <SidebarListItem
+            key={item.label}
+            item={item}
+            isNotCollapsedAndSidebar={isNotCollapsedAndSidebar}
+            selectedItem={selectedItem}
+            onItemClick={onItemClick}
+            isCollapsed={isCollapsed}
+          />
+        ))}
+      </div>
+    );
+  },
+);
+
+// Extract list item into separate component for better memoization
+const SidebarListItem = React.memo(
+  ({
+    item,
+    isNotCollapsedAndSidebar,
+    selectedItem,
+    onItemClick,
+    isCollapsed,
+  }: {
+    item: SidebarItem;
+    isNotCollapsedAndSidebar: boolean;
+    selectedItem: string;
+    onItemClick: (label: string) => void;
+    isCollapsed: boolean;
+  }) => {
+    return (
+      <div
+        className={`group flex ${
+          isNotCollapsedAndSidebar ? 'justify-between' : 'justify-center'
+        } rounded-md items-center ${
+          selectedItem === item.label
+            ? isNotCollapsedAndSidebar
+              ? '!bg-cyprus-800'
+              : '!bg-cyprus-50'
+            : ''
+        }`}
+        onClick={() => onItemClick(item.label)}
+      >
+        <div
+          className={`flex items-center ${
+            isNotCollapsedAndSidebar ? 'p-3' : 'py-3'
+          } cursor-pointer`}
         >
-          {hasChildren ? (
-            <ChevronRight
-              className={cn(
-                'h-4 w-4 transition-transform',
-                isGroupCollapsed && 'rotate-90',
-              )}
-            />
-          ) : (
-            <div className="w-4" />
+          {item.icon && (
+            <div
+              className={`${isNotCollapsedAndSidebar && 'w-9'} ${
+                selectedItem === item.label
+                  ? isNotCollapsedAndSidebar
+                    ? 'text-cyprus-50'
+                    : 'text-cyprus-800'
+                  : isNotCollapsedAndSidebar
+                    ? 'text-current group-hover:text-grey-900'
+                    : 'text-cyprus-50 group-hover:text-white'
+              }`}
+            >
+              {item.icon}
+            </div>
           )}
-          <span className="flex-1">{item.name}</span>
-        </Link>
-        {hasChildren && isGroupCollapsed && (
-          <div className="bg-black/10">
-            {item.items?.map((subItem) => renderMenuItem(subItem, depth + 1))}
-          </div>
+          {(!isCollapsed || isNotCollapsedAndSidebar) && (
+            <div
+              className={`${
+                selectedItem === item.label
+                  ? 'text-cyprus-50'
+                  : 'group-hover:text-grey-900'
+              }`}
+            >
+              {item.label}
+            </div>
+          )}
+        </div>
+        {item.dropdownItems && !isCollapsed && (
+          <ChevronRight className="cursor-pointer h-4" />
         )}
       </div>
     );
-  };
+  },
+);
+
+export const Sidebar = React.memo(() => {
+  const router = useRouter();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [selectedMenu, setSelectedMenu] = useState('Dashboard');
+  const [selectedSubMenu, setSelectedSubMenu] = useState('');
+  const [selectedSideBar, setSelectedSideBar] = useState<SidebarItem | null>(
+    null,
+  );
+
+  // Memoize sidebar items to prevent recreation on every render
+  const sidebarListItems = useMemo<SidebarItem[]>(
+    () => [
+      { label: 'Dashboard', link: '/dashboard', icon: <HomeIcon /> },
+      {
+        label: 'Users',
+        icon: <SettingsIcon />,
+        dropdownItems: [
+          { label: 'User', link: '/users', icon: <SettingsIcon /> },
+          { label: 'Role', link: '/roles', icon: <Users /> },
+          { label: 'CMS', link: '/cms', icon: <Building /> },
+        ],
+      },
+    ],
+    [],
+  );
+
+  const toggleSidebar = useCallback(() => {
+    setIsCollapsed((prev) => !prev);
+  }, []);
+
+  const handleMainItemClick = useCallback(
+    (label: string) => {
+      const item = sidebarListItems.find((item) => item.label === label);
+      if (item) {
+        if (item.link) {
+          router.push(item.link);
+        }
+        if (item.dropdownItems) {
+          setSelectedSideBar(item);
+          setIsCollapsed(true);
+        } else {
+          setSelectedSideBar(null);
+        }
+        setSelectedMenu(label);
+      }
+    },
+    [router, sidebarListItems],
+  );
+
+  const handleSubItemClick = useCallback((label: string) => {
+    setSelectedSubMenu(label);
+  }, []);
+
+  useEffect(() => {
+    const mainMenu = sidebarListItems.find(
+      (item) => item.label === selectedMenu,
+    );
+    if (mainMenu?.dropdownItems) {
+      setSelectedSideBar(mainMenu);
+    } else {
+      setSelectedSideBar(null);
+    }
+  }, [selectedMenu, sidebarListItems]);
 
   return (
-    <>
-      {isMobile && (
-        <button
-          onClick={toggleSidebar}
-          className="absolute top-4 left-4 z-99 rounded p-2 bg-primary/10 text-gray-500"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-      )}
-      <div
-        className={cn(
-          'bg-sidebar text-sidebar-foreground transition-all duration-300 h-screen overflow-y-auto flex flex-col fixed md:relative z-40',
-          sidebarOpen ? 'w-64' : 'w-0 md:w-16',
-          !sidebarOpen && 'md:block hidden',
-        )}
+    <nav className="flex">
+      <motion.div
+        className={`px-2 py-4 flex flex-col gap-8 h-[100vh] ${
+          isCollapsed ? 'bg-cyprus-800' : 'bg-green-0'
+        }`}
+        initial={false}
+        animate={{ width: isCollapsed ? 84 : 240 }}
+        transition={{ duration: 0.3 }}
       >
-        <div className="flex h-14 items-center justify-between px-4 sticky top-0 bg-sidebar z-10">
-          {sidebarOpen && (
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-white/10" />
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold">Dashboard APP</span>
-                <span className="text-xs text-gray-400">Version 1.0</span>
-              </div>
+        <div
+          className={`flex ${
+            isCollapsed ? 'justify-center' : 'justify-between'
+          } items-center`}
+        >
+          {isCollapsed ? <Home /> : <Building />}
+          {!isCollapsed && (
+            <div
+              className="text-grey-300 hover:text-green-500 cursor-pointer"
+              onClick={toggleSidebar}
+            >
+              <ChevronLeft />
             </div>
           )}
-          <button
-            onClick={toggleSidebar}
-            className="rounded p-1 hover:bg-white/10"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <nav className="space-y-1 p-2">
-            {menuGroups.map((group) => (
-              <div key={group.title}>
-                {group.link ? (
-                  <Link
-                    href={group.link}
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-white/10 cursor-pointer"
-                    onClick={() => isMobile && setSidebarOpen(false)}
-                  >
-                    {group.icon}
-                    {sidebarOpen && (
-                      <span className="flex-1 text-left">{group.title}</span>
-                    )}
-                  </Link>
-                ) : (
-                  <button
-                    onClick={() => toggleGroup(group.title)}
-                    className={cn(
-                      'flex w-full items-center gap-2 px-4 py-2 hover:bg-white/10',
-                      collapsed[group.title] && 'bg-white/5',
-                    )}
-                  >
-                    {group.icon}
-                    {sidebarOpen && (
-                      <>
-                        <span className="flex-1 text-left">{group.title}</span>
-                        <ChevronDown
-                          className={cn(
-                            'h-4 w-4 transition-transform',
-                            collapsed[group.title] && 'rotate-180',
-                          )}
-                        />
-                      </>
-                    )}
-                  </button>
-                )}
-                {collapsed[group.title] && sidebarOpen && (
-                  <div className="bg-black/20">
-                    {group.items?.map((item) => renderMenuItem(item))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </nav>
-        </div>
+        <DisplaySidebarListItems
+          items={sidebarListItems}
+          selectedItem={selectedMenu}
+          onItemClick={handleMainItemClick}
+          isCollapsed={isCollapsed}
+        />
+      </motion.div>
 
-        {sidebarOpen && (
-          <div className="sticky bottom-0 p-4 bg-sidebar border-t border-black/10">
-            <div className="flex items-center gap-2">
-              <HelpCircle className="h-5 w-5 text-gray-800" />
-              <span className="text-sm text-gray-800">Support</span>
-            </div>
+      {selectedSideBar && (
+        <motion.div
+          className="w-[208px] h-[100vh] bg-green-0 px-2 py-4 flex flex-col gap-5"
+          animate={{ width: isCollapsed ? 208 : 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="font-bold text-2xl text-gray-900 mt-2 ml-3">
+            {selectedSideBar.label}
           </div>
-        )}
-      </div>
-    </>
+
+          <DisplaySidebarListItems
+            items={selectedSideBar.dropdownItems || []}
+            selectedItem={selectedSubMenu}
+            onItemClick={handleSubItemClick}
+            isCollapsed={isCollapsed}
+            type="sidebar"
+          />
+
+          {selectedSideBar.subItems && (
+            <>
+              <div className="h-[1px] bg-gray-200"></div>
+              <DisplaySidebarListItems
+                items={selectedSideBar.subItems}
+                selectedItem={selectedSubMenu}
+                onItemClick={handleSubItemClick}
+                isCollapsed={isCollapsed}
+                type="sidebar"
+              />
+            </>
+          )}
+        </motion.div>
+      )}
+    </nav>
   );
-}
+});
