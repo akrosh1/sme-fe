@@ -170,7 +170,7 @@ export const useResource = <T>(
     'get',
     {
       enabled: !!id,
-      onError: (error: undefined | AxiosError) => {
+      onError: (error: AxiosError) => {
         console.error(
           `Failed to fetch ${resource} with ID ${id}:`,
           error?.message,

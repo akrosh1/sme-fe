@@ -13,13 +13,13 @@ export const authApi = createApi({
     },
   }),
   endpoints: (builder) => ({
-    login: builder.mutation({
-      query: (credentials) => ({
-        url: '/auth/token/',
-        method: 'POST',
-        body: credentials,
-      }),
-    }),
+    // login: builder.mutation({
+    //   query: (credentials) => ({
+    //     url: '/auth/token/',
+    //     method: 'POST',
+    //     body: credentials,
+    //   }),
+    // }),
     register: builder.mutation({
       query: (credentials) => ({
         url: '/profiles/',
@@ -48,7 +48,7 @@ export const authApi = createApi({
 });
 
 export const {
-  useLoginMutation,
+  // useLoginMutation,
   useRegisterMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,

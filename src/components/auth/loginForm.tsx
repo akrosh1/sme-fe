@@ -1,13 +1,19 @@
 'use client';
 
-import { useLoginMutation } from '@/api/auth/authApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useCreateResource } from '@/hooks/useAPIManagement';
 import { cn } from '@/lib/utils';
+import {
+  loginFailure,
+  loginStart,
+  loginSuccess,
+} from '@/store/slices/authSlice';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
 import loginImg from '../../../public/assets/signIn.svg';
 
@@ -16,27 +22,44 @@ interface LoginFormInputs {
   password: string;
 }
 
+interface LoginResponse {
+  active_role: string;
+  access: string;
+}
+
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
   const router = useRouter();
-  const [login, { isLoading }] = useLoginMutation();
+  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
     formState: { isSubmitting },
   } = useForm<LoginFormInputs>();
 
+  const { mutate: login, isPending: isCreating } =
+    useCreateResource<LoginResponse>('/auth/token/', {
+      onSuccess: (data) => {
+        dispatch(
+          loginSuccess({
+            active_role: data.data.active_role,
+            token: data.data.access,
+          }),
+        );
+        toast.success('Login successful');
+        router.push('/dashboard');
+      },
+      onError: (error) => {
+        dispatch(loginFailure(error?.message || 'Failed to login'));
+        toast.error(error?.message || 'Invalid credentials. Please try again.');
+      },
+    });
+
   const onSubmit = async (data: LoginFormInputs) => {
-    try {
-      const res = await login(data).unwrap();
-      console.log('🚀 ~ onSubmit ~ res:', res);
-      toast.success('Logged in successfully!');
-      router.push('/dashboard');
-    } catch (error) {
-      toast.error('Invalid credentials. Please try again.');
-    }
+    dispatch(loginStart());
+    login(data);
   };
 
   return (
@@ -79,12 +102,16 @@ export function LoginForm({
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? 'Logging in...' : 'Login'}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isSubmitting || isCreating}
+              >
+                {isSubmitting || isCreating ? 'Logging in...' : 'Login'}
               </Button>
 
               <div className="text-center text-sm">
-                Don&apos;t have an account?{' '}
+                Don't have an account?{' '}
                 <a href="/register" className="underline underline-offset-4">
                   Sign up
                 </a>

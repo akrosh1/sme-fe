@@ -3,7 +3,7 @@
 import { Header } from '@/components/common/Header';
 import { Sidebar } from '@/components/common/Sidebar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useAuth } from '@/hooks/useAuth';
+import useGlobalState from '@/hooks/useGlobalState';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -12,16 +12,16 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { token } = useAuth();
+  const { access } = useGlobalState();
   const router = useRouter();
 
   useEffect(() => {
-    if (!token) {
+    if (!access) {
       router.replace('/login');
     }
-  }, [token, router]);
+  }, [access, router]);
 
-  if (!token) {
+  if (!access) {
     return null;
   }
 

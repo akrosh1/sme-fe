@@ -2,7 +2,7 @@
 
 import { Header } from '@/components/common/Header';
 import { Sidebar } from '@/components/common/Sidebar';
-import { useAuth } from '@/hooks/useAuth';
+import useGlobalState from '@/hooks/useGlobalState';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -11,7 +11,7 @@ export default function UsersLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { token } = useAuth();
+  const { access: token } = useGlobalState();
   const router = useRouter();
 
   useEffect(() => {

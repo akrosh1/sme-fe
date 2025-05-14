@@ -1,7 +1,7 @@
 'use client';
 
 import { Toaster } from '@/components/ui/sonner';
-import store from '@/store';
+import { store } from '@/store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
 import { Provider } from 'react-redux';
