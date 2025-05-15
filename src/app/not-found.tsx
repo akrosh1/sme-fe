@@ -7,7 +7,7 @@ export default function Component() {
   return (
     <div className="flex items-center min-h-screen px-4 py-12 sm:px-6 md:px-8 lg:px-12 xl:px-16">
       <div className="w-full space-y-6 text-center">
-        <div className="space-y-3">
+        <div className="space-y-3 flex flex-col items-center">
           <Image
             src={NotFoundImg.src}
             height={200}
@@ -27,7 +27,7 @@ export default function Component() {
           prefetch={false}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Return to website
+          Return to Home
         </Link>
       </div>
     </div>
