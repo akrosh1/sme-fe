@@ -27,7 +27,8 @@ import {
 import { cn } from '@/lib/utils';
 import { DataTableColumnHeader } from './dataTableColumnHeader';
 import { DataTableNoResults } from './dataTableNoResults';
-import { DataTablePagination } from './dataTablePagination';
+// import { DataTablePagination } from './dataTablePagination';
+import TablePagination from './dataTablePagination';
 import { DataTableToolbar } from './dataTableToolbar';
 
 export interface DataTableFilterOption<TData> {
@@ -185,7 +186,15 @@ export function DataTable<TData>({
         </Table>
       </ScrollArea>
       {pagination && table.getPageCount() > 1 && (
-        <DataTablePagination table={table} />
+        <TablePagination
+          currentPage={table.getState().pagination.pageIndex + 1}
+          totalRows={table.getRowCount()}
+          rowsPerPage={table.getState().pagination.pageSize}
+          onPageChange={table.setPageIndex}
+          onRowsPerPageChange={table.setPageSize as any}
+          canPreviousPage={table.getCanPreviousPage()}
+          canNextPage={table.getCanNextPage()}
+        />
       )}
     </div>
   );

@@ -12,7 +12,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CameraIcon, Pencil, Save, X } from 'lucide-react';
@@ -22,32 +28,73 @@ import { toast } from 'sonner';
 import * as z from 'zod';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
+// Updated schema based on provided specification
 const profileFormSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
-  bio: z.string().optional(),
-  country: z.string().min(1, 'Country is required'),
-  state: z.string().min(1, 'State is required'),
-  postalCode: z.string().min(1, 'Postal code is required'),
-  taxId: z.string().optional(),
-  profileImage: z.string().optional(),
+  alternate_email: z
+    .string()
+    .email('Invalid email address')
+    .max(254, 'Email must be at most 254 characters')
+    .optional()
+    .or(z.literal('')),
+  image: z
+    .string()
+    .max(255, 'Image URL must be at most 255 characters')
+    .optional()
+    .or(z.literal('')),
+  first_name: z
+    .string()
+    .min(1, 'First name is required')
+    .max(50, 'First name must be at most 50 characters'),
+  middle_name: z
+    .string()
+    .max(50, 'Middle name must be at most 50 characters')
+    .optional()
+    .or(z.literal('')),
+  last_name: z
+    .string()
+    .min(1, 'Last name is required')
+    .max(50, 'Last name must be at most 50 characters'),
+  fullname: z
+    .string()
+    .max(150, 'Full name must be at most 150 characters')
+    .optional()
+    .or(z.literal('')),
+  phone_number: z
+    .string()
+    .max(50, 'Phone number must be at most 50 characters')
+    .optional()
+    .or(z.literal('')),
+  gender: z
+    .enum(['Male', 'Female', 'Other'], {
+      errorMap: () => ({ message: 'Please select a valid gender' }),
+    })
+    .optional(),
+  date_of_birth: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)')
+    .optional()
+    .or(z.literal('')),
+  nationality: z
+    .string()
+    .max(50, 'Nationality must be at most 50 characters')
+    .optional()
+    .or(z.literal('')),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
+// Updated default values
 const defaultValues: Partial<ProfileFormValues> = {
-  firstName: 'Michael',
-  lastName: 'Rodriguez',
-  email: 'Rodriguez@gmail.com',
-  phone: '(213) 555-1234',
-  bio: 'Product Designer',
-  country: 'United States of America',
-  state: 'California, USA',
-  postalCode: 'ERT 62574',
-  taxId: 'AS56417896',
-  profileImage: '../images/avatar.png',
+  alternate_email: 'Rodriguez@gmail.com',
+  image: '../images/avatar.png',
+  first_name: 'Michael',
+  middle_name: '',
+  last_name: 'Rodriguez',
+  fullname: 'Michael Rodriguez',
+  phone_number: '(213) 555-1234',
+  gender: undefined,
+  date_of_birth: '',
+  nationality: 'American',
 };
 
 export function ProfileForm({
@@ -73,7 +120,11 @@ export function ProfileForm({
   }
 
   const handleUploadProfileImage = () => {
-    console.log('Upload profile image');
+    // Simulate file upload (replace with actual file upload logic)
+    const newImageUrl = prompt('Enter image URL:'); // For demo; use proper file input in production
+    if (newImageUrl) {
+      form.setValue('image', newImageUrl, { shouldValidate: true });
+    }
   };
 
   return (
@@ -90,27 +141,30 @@ export function ProfileForm({
                       <div className="relative border rounded-full">
                         <Avatar className="w-20 h-20">
                           <AvatarImage
-                            src="https://github.com/shadcn.png"
-                            alt="@shadcn"
+                            src={
+                              form.watch('image') ||
+                              'https://github.com/shadcn.png'
+                            }
+                            alt="Profile"
                           />
                           <AvatarFallback>CN</AvatarFallback>
                         </Avatar>
-                        <CameraIcon
-                          onClick={handleUploadProfileImage}
-                          size={16}
-                          className="absolute p-1 bg-gray-200 dark:bg-gray-100 w-6 h-6 rounded-2xl bottom-0 right-0"
-                        />
+                        {isEditing && (
+                          <CameraIcon
+                            onClick={handleUploadProfileImage}
+                            size={16}
+                            className="absolute p-1 bg-gray-200 dark:bg-gray-100 w-6 h-6 rounded-2xl bottom-0 right-0 cursor-pointer"
+                          />
+                        )}
                       </div>
                       {!isEditing && (
                         <div>
                           <p className="font-medium text-xl text-gray-900">
-                            {form.watch('firstName')} {form.watch('lastName')}
+                            {form.watch('fullname') ||
+                              `${form.watch('first_name')} ${form.watch('last_name')}`}
                           </p>
                           <p className="text-muted-foreground">
-                            {form.watch('bio')}
-                          </p>
-                          <p className="text-muted-foreground">
-                            {form.watch('state')}
+                            {form.watch('nationality') || 'Not specified'}
                           </p>
                         </div>
                       )}
@@ -140,7 +194,7 @@ export function ProfileForm({
                       </Button>
                       <Button
                         type="submit"
-                        disabled={!form.formState.isValid}
+                        disabled={!form.formState.isValid || isLoading}
                         className="gap-2"
                       >
                         <Save className="h-4 w-4" />
@@ -153,12 +207,12 @@ export function ProfileForm({
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-lg font-semibold">
-                      Personal information
+                      Personal Information
                     </h2>
                     <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2">
                       <FormField
                         control={form.control}
-                        name="firstName"
+                        name="first_name"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>First Name</FormLabel>
@@ -175,7 +229,24 @@ export function ProfileForm({
                       />
                       <FormField
                         control={form.control}
-                        name="lastName"
+                        name="middle_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Middle Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                disabled={!isEditing}
+                                className="bg-background"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="last_name"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Last Name</FormLabel>
@@ -192,10 +263,10 @@ export function ProfileForm({
                       />
                       <FormField
                         control={form.control}
-                        name="email"
+                        name="fullname"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email address</FormLabel>
+                            <FormLabel>Full Name</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
@@ -209,10 +280,28 @@ export function ProfileForm({
                       />
                       <FormField
                         control={form.control}
-                        name="phone"
+                        name="alternate_email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Phone</FormLabel>
+                            <FormLabel>Alternate Email</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                disabled={!isEditing}
+                                className="bg-background"
+                                type="email"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="phone_number"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone Number</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
@@ -226,55 +315,42 @@ export function ProfileForm({
                       />
                       <FormField
                         control={form.control}
-                        name="bio"
-                        render={({ field }) => (
-                          <FormItem className="md:col-span-2">
-                            <FormLabel>Bio</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                {...field}
-                                disabled={!isEditing}
-                                className="bg-background"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <h2 className="text-lg font-semibold">Address</h2>
-                    <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2">
-                      <FormField
-                        control={form.control}
-                        name="country"
+                        name="gender"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Country</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                disabled={!isEditing}
-                                className="bg-background"
-                              />
-                            </FormControl>
+                            <FormLabel>Gender</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              disabled={!isEditing}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select gender" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="Male">Male</SelectItem>
+                                <SelectItem value="Female">Female</SelectItem>
+                                <SelectItem value="Other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       <FormField
                         control={form.control}
-                        name="state"
+                        name="date_of_birth"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>City / State</FormLabel>
+                            <FormLabel>Date of Birth</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 disabled={!isEditing}
                                 className="bg-background"
+                                type="date"
                               />
                             </FormControl>
                             <FormMessage />
@@ -283,27 +359,10 @@ export function ProfileForm({
                       />
                       <FormField
                         control={form.control}
-                        name="postalCode"
+                        name="nationality"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Postal Code</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                disabled={!isEditing}
-                                className="bg-background"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="taxId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>TAX ID</FormLabel>
+                            <FormLabel>Nationality</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
