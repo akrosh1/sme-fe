@@ -30,7 +30,7 @@ interface User {
   createdAt: string;
 }
 
-const UsersTable = () => {
+const CMSList = () => {
   const router = useRouter();
   const [sorting, setSorting] = useState([{ id: 'createdAt', desc: true }]);
   const [columnVisibility, setColumnVisibility] = useState({});
@@ -250,4 +250,4 @@ const UsersTable = () => {
   );
 };
 
-export default UsersTable;
+export default CMSList;

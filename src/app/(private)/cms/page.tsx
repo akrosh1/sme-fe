@@ -1,16 +1,16 @@
-import UserManagement from '@/components/users';
+import CMSList from '@/components/cms';
 import { Metadata } from 'next';
 import { Suspense } from 'react';
 
 export const metadata: Metadata = {
-  title: 'Users',
-  description: 'List of users',
+  title: 'CMS',
+  description: 'Content Management System',
 };
 
-export default function UsersPage() {
+export default function CMSPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <UserManagement />
+      <CMSList />
     </Suspense>
   );
 }

@@ -1,10 +1,10 @@
 'use client';
 
-import PageHeader from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -18,140 +18,148 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useCreateResource, useUpdateResource } from '@/hooks/useAPIManagement';
+import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { z } from 'zod';
+import * as z from 'zod';
 
-export const userRoles = ['ADMIN', 'EDITOR', 'USER'] as const;
-export const userStatuses = ['ACTIVE', 'INACTIVE', 'SUSPENDED'] as const;
-
-export const userFormSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  role: z.enum(userRoles),
-  status: z.enum(userStatuses),
-});
-
-export type UserFormValues = z.infer<typeof userFormSchema>;
-export type UserRole = UserFormValues['role'];
-export type UserStatus = UserFormValues['status'];
-
-interface UserFormProps {
-  defaultValues?: Partial<UserFormValues>;
-  onSuccess?: () => void;
-  onCancel?: () => void;
+export interface ContentItem {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  category: string;
+  status: 'draft' | 'published' | 'archived';
+  createdAt: string;
+  updatedAt: string;
 }
 
-export function UserForm({
-  defaultValues,
-  onSuccess,
-  onCancel,
-}: UserFormProps) {
-  const initialValues = {
-    id: '',
-    name: '',
-    email: '',
-    role: 'USER' as const,
-    status: 'ACTIVE' as const,
-    ...defaultValues,
-  };
+const formSchema = z.object({
+  title: z
+    .string()
+    .min(2, {
+      message: 'Title must be at least 2 characters.',
+    })
+    .max(100, {
+      message: 'Title must not exceed 100 characters.',
+    }),
+  description: z
+    .string()
+    .min(10, {
+      message: 'Description must be at least 10 characters.',
+    })
+    .max(500, {
+      message: 'Description must not exceed 500 characters.',
+    }),
+  content: z.string().min(10, {
+    message: 'Content must be at least 10 characters.',
+  }),
+  category: z.string({
+    required_error: 'Please select a category.',
+  }),
+  status: z.enum(['draft', 'published', 'archived'], {
+    required_error: 'Please select a status.',
+  }),
+});
 
-  const form = useForm<UserFormValues>({
-    resolver: zodResolver(userFormSchema),
-    defaultValues: initialValues,
-    mode: 'onChange',
+interface ContentFormProps {
+  content?: ContentItem;
+}
+
+export default function ContentForm({ content }: ContentFormProps) {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEditing = !!content;
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: content?.title || '',
+      description: content?.description || '',
+      content: content?.content || '',
+      category: content?.category || '',
+      status: content?.status || 'draft',
+    },
   });
 
-  const { mutate: createUser, isPending: isCreating } =
-    useCreateResource<UserFormValues>('users', {
-      onSuccess: () => {
-        toast.success('User created successfully');
-        onSuccess?.();
-      },
-      onError: (error) => {
-        toast.error(error?.message || 'Failed to create user');
-      },
-    });
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
 
-  const { mutate: updateUser, isPending: isUpdating } =
-    useUpdateResource<UserFormValues>(`users/${initialValues.id}`, {
-      onSuccess: () => {
-        toast.success('User updated successfully');
-        onSuccess?.();
-      },
-      onError: (error) => {
-        toast.error(error?.message || 'Failed to update user');
-      },
-    });
+    try {
+      const url = isEditing ? `/api/content/${content.id}` : '/api/content';
 
-  const isSubmitting = isCreating || isUpdating;
+      const method = isEditing ? 'PUT' : 'POST';
 
-  const onSubmit = (values: UserFormValues) => {
-    if (values.id) {
-      updateUser(values);
-    } else {
-      createUser(values);
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save content');
+      }
+
+      router.push('/');
+      router.refresh();
+    } catch (error) {
+      console.error('Error saving content:', error);
+      alert('Failed to save content. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-  };
+  }
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6 wrapper"
-      >
-        <PageHeader title="Users" actionText="Back" actionPath="/users" />
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Full Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter content title" {...field} />
+              </FormControl>
+              <FormDescription>The title of your content item.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
-            name="email"
+            name="category"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="john@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="role"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Role</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl className="w-full">
+                <FormLabel>Category</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a role" />
+                      <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="ADMIN">Admin</SelectItem>
-                    <SelectItem value="EDITOR">Editor</SelectItem>
-                    <SelectItem value="USER">User</SelectItem>
+                    <SelectItem value="blog">Blog</SelectItem>
+                    <SelectItem value="news">News</SelectItem>
+                    <SelectItem value="tutorial">Tutorial</SelectItem>
+                    <SelectItem value="case-study">Case Study</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormDescription>
+                  The category this content belongs to.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -163,49 +171,77 @@ export function UserForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl className="w-full">
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue placeholder="Select a status" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="INACTIVE">Inactive</SelectItem>
-                    <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormDescription>
+                  The current status of this content.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
 
-        <div className="flex justify-end gap-4">
-          {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Enter a short description"
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>
+                A brief summary of your content.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
           )}
-          <Button
-            type="submit"
-            disabled={isSubmitting || !form.formState.isValid}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {initialValues.id ? 'Updating...' : 'Creating...'}
-              </>
-            ) : initialValues.id ? (
-              'Update User'
-            ) : (
-              'Create User'
-            )}
+        />
+
+        <FormField
+          control={form.control}
+          name="content"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Content</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Enter the main content here"
+                  className="min-h-[200px]"
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>The main body of your content.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end gap-4">
+          <Button type="button" variant="outline" onClick={() => router.back()}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isEditing ? 'Update' : 'Create'} Content
           </Button>
         </div>
       </form>

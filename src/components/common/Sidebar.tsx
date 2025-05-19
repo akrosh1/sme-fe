@@ -68,7 +68,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
       {
         label: 'Permissions',
         icon: <LockIcon />,
-        route: '/users/permissions',
+        route: '/users/permission',
         hasAccess: true,
       },
     ],
