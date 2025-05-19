@@ -1,75 +1,159 @@
 'use client';
 
+import { FormElement } from '@/components/common/form/formElement';
+import PageHeader from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
-import { random } from 'lodash';
-import { useState } from 'react';
-import { Post } from '..';
-import { CMSForm } from './components/cmsForm';
+import { Form } from '@/components/ui/form';
+import { useCreateResource, useUpdateResource } from '@/hooks/useAPIManagement';
+import useFetch from '@/hooks/useFetch';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AxiosError } from 'axios';
+import { Loader2 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import * as z from 'zod';
 
-// import { CMSForm } from '@/components/CMSForm';
-// import { DataTable } from '@/components/DataTable';
-// import { Button } from '@/components/ui/button';
-// import { Post } from '@/types';
-// import { useState } from 'react';
-// import { v4 as uuidv4 } from 'uuid';
+const formSchema = z.object({
+  id: z.number().optional(),
+  title: z.string().min(1, 'Title is required'),
+  content: z.string().min(1, 'Content is required'),
+  is_active: z.union([z.boolean(), z.string()]),
+});
 
-export default function Home() {
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: '1',
-      title: 'First Post',
-      content: 'This is the first post content.',
-      status: 'published',
-      createdAt: new Date().toISOString(),
+type CMSFormValues = z.infer<typeof formSchema>;
+export function CMSForm() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const cmsId = searchParams.get('id');
+
+  const { data: user, isLoading } = useFetch<
+    'get',
+    { id: string },
+    CMSFormValues
+  >(`cms-pages/${cmsId}`, 'get', {
+    enabled: !!cmsId,
+    //  @ts-expect-error will be fixed later
+    onError: (error: AxiosError) => {
+      console.error(`Failed to fetch user with ID ${cmsId}:`, error?.message);
     },
-    // Add more sample data if needed
-  ]);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState<Post | undefined>(undefined);
+    select: (data: { data: CMSFormValues }) => data.data,
+  });
 
-  const handleAdd = (data: Omit<Post, 'id' | 'createdAt'>) => {
-    const newPost: Post = {
+  const initialValues: CMSFormValues = {
+    id: user?.id || 0,
+    title: user?.title || '',
+    content: user?.content || '',
+    is_active: user?.is_active ? 'true' : 'false',
+  };
+  console.log('🚀 ~ CMSForm ~ initialValues:', initialValues);
+
+  const form = useForm<CMSFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: initialValues,
+    mode: 'onChange',
+  });
+
+  useEffect(() => {
+    if (user) {
+      form.reset({
+        ...initialValues,
+      });
+    }
+  }, [user, form]);
+
+  const { mutate: createUser, isPending: isCreating } =
+    useCreateResource<CMSFormValues>('cms-pages/', {
+      onSuccess: () => {
+        toast.success('CMS created successfully');
+        router.push('/cms');
+      },
+      onError: (error) => {
+        toast.error(error?.message || 'Failed to create user');
+      },
+    });
+
+  const { mutate: updateUser, isPending: isUpdating } =
+    useUpdateResource<CMSFormValues>(`cms-pages/${cmsId}`, {
+      onSuccess: () => {
+        toast.success('CMS updated successfully');
+        router.push('/cms');
+        form.reset(initialValues);
+      },
+      onError: (error) => {
+        toast.error(error?.message || 'Failed to update user');
+      },
+    });
+
+  const isSubmitting = isCreating || isUpdating;
+  const onSubmit = (values: CMSFormValues) => {
+    const { id, is_active, ...data } = values;
+    const transformedData = {
       ...data,
-      id: random(1000, 9999).toString(),
-      createdAt: new Date().toISOString(),
+      is_active: is_active === 'true' ? true : false,
     };
-    setPosts([...posts, newPost]);
-    setIsFormOpen(false);
+    if (cmsId) {
+      updateUser(transformedData);
+    } else {
+      createUser(transformedData);
+    }
   };
 
-  const handleEdit = (post: Post) => {
-    setEditingPost(post);
-    setIsFormOpen(true);
+  const handleCancelForm = () => {
+    form.reset(initialValues);
   };
 
-  const handleUpdate = (data: Omit<Post, 'id' | 'createdAt'>) => {
-    if (!editingPost) return;
-    setPosts(
-      posts.map((post) =>
-        post.id === editingPost.id ? { ...post, ...data } : post,
-      ),
-    );
-    setIsFormOpen(false);
-    setEditingPost(undefined);
-  };
-
-  const handleDelete = (id: string) => {
-    setPosts(posts.filter((post) => post.id !== id));
-  };
+  const statusOptions = [
+    { value: 'true', label: 'Active' },
+    { value: 'false', label: 'InActive' },
+  ];
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">CMS Dashboard</h1>
-        <Button onClick={() => setIsFormOpen(true)}>Add Post</Button>
-      </div>
-      {/* <DataTable data={posts} onEdit={handleEdit} onDelete={handleDelete} /> */}
-      <CMSForm
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
-        defaultValues={editingPost}
-        onSubmit={editingPost ? handleUpdate : handleAdd}
-      />
-    </div>
+    <Form {...form}>
+      <PageHeader title="Add CMS Page" actionText="Back" actionPath="/cms" />
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-4 wrapper"
+      >
+        <FormElement label="Title" type="text" name="title" />
+        <FormElement label="Content" type="textarea" name="content" />
+        <FormElement
+          label="Status"
+          options={statusOptions}
+          onChange={(value) => form.setValue('is_active', value)}
+          value={initialValues.is_active as string}
+          placeholder="select"
+          type="select"
+          name="is_active"
+        />
+
+        <div className="flex justify-end gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCancelForm}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting || !form.formState.isValid}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {initialValues.id ? 'Updating...' : 'Creating...'}
+              </>
+            ) : initialValues.id ? (
+              'Update CMS'
+            ) : (
+              'Create CMS'
+            )}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

@@ -30,14 +30,14 @@ export function Header() {
       <div className="container flex h-15 items-center p-4">
         <div className="flex flex-1 items-center  space-x-2 justify-end">
           <nav className="flex items-center">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="default">
               <Bell className="h-5 w-5" />
               <span className="sr-only">Notifications</span>
             </Button>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Settings className="h-5 w-5" />
+                <Button variant="ghost" size="default">
+                  <Settings size={20} />
                   <span className="sr-only">Settings</span>
                 </Button>
               </PopoverTrigger>

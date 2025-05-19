@@ -1,7 +1,7 @@
 'use client';
 
-import { CurrencyInput } from '@/components/form/currencyInput';
-import { PhoneInput } from '@/components/form/phoneInput';
+import { CurrencyInput } from '@/components/common/form/currencyInput';
+import { PhoneInput } from '@/components/common/form/phoneInput';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -194,7 +194,7 @@ export function FormElement<T extends keyof FormElementProps>({
               render={({ field }) => (
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  defaultValue={field.value as string}
                   {...selectProps}
                 >
                   <SelectTrigger

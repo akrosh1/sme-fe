@@ -14,11 +14,12 @@ import {
   BellIcon,
   ChevronLeft,
   ChevronRight,
+  FileCog,
   LayoutDashboardIcon,
   LockIcon,
   Menu,
   SettingsIcon,
-  ShieldIcon,
+  ShieldUser,
   UsersIcon,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -74,8 +75,14 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     ],
   },
   {
+    label: 'Roles',
+    icon: <ShieldUser />,
+    route: '/roles',
+    hasAccess: true,
+  },
+  {
     label: 'CMS',
-    icon: <ShieldIcon />,
+    icon: <FileCog />,
     route: '/cms',
     hasAccess: true,
   },

@@ -15,6 +15,7 @@ const TableSN: React.FC<TableSNProps> = ({
 }) => {
   const [serialNumber, setSerialNumber] = useState<number>(0);
 
+  console.log('index, currentPage, pageSize', index, currentPage, pageSize);
   useEffect(() => {
     const calculateSerialNumber = () => {
       const pageStart = (currentPage - 1) * pageSize;

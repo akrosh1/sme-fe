@@ -63,6 +63,7 @@
     "react-hook-form": "^7.56.3",
     "react-i18next": "^15.5.1",
     "react-redux": "^9.2.0",
+    "react-virtual": "^2.10.4",
     "recharts": "^2.15.3",
     "shadcn-ui": "^0.9.5",
     "sonner": "^2.0.3",

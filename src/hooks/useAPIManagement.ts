@@ -14,7 +14,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Interface for paginated API responses
 interface PaginatedResponse<T> {
-  data: T[];
+  data: T;
   total: number;
   page: number;
   pageSize: number;

@@ -1,47 +1,51 @@
 'use client';
 
-import { useResourceList } from '@/hooks/useAPIManagement';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useDeleteResource, useResourceList } from '@/hooks/useAPIManagement';
+import { QueryClient } from '@tanstack/react-query';
 import type { ColumnDef } from '@tanstack/react-table';
-import { CalendarIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { ConfirmationModal } from '../common/modal/confirmationModal';
 import PageHeader from '../common/PageHeader';
+import { SearchInput } from '../common/searchComponent';
 import { DataTable } from '../common/table';
-import { Button } from '../ui/button';
+import ActionMenu from '../common/table/actionMenu';
+import TableSN from '../common/table/tableSN';
 
-interface User {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  active_role: string;
-  gender: string;
-  createdAt: string;
+// Define interfaces
+interface IPostResponse {
+  total: number;
+  count: number;
+  results: Post[];
 }
-
-export type Post = {
+interface Post {
   id: string;
   title: string;
   content: string;
-  status: 'draft' | 'published' | 'archived';
-  createdAt: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+interface ModalState {
+  type: 'delete' | null;
+  cmsId: string | null;
+  open: boolean;
+}
+
+const DEFAULT_MODAL_STATE: ModalState = {
+  type: null,
+  cmsId: null,
+  open: false,
 };
 
 const CMSList = () => {
   const router = useRouter();
-  const [sorting, setSorting] = useState([{ id: 'createdAt', desc: true }]);
-  const [columnVisibility, setColumnVisibility] = useState({});
-
-  const [modalState, setModalState] = useState<{
-    type: 'edit' | 'delete' | null;
-    userId: string | null;
-    open: boolean;
-  }>({ type: null, userId: null, open: false });
+  const [modalState, setModalState] = useState<ModalState>(DEFAULT_MODAL_STATE);
+  const queryClient = new QueryClient();
 
   const {
-    data: users,
+    data: cmsData,
     total,
     isLoading,
     error,
@@ -49,109 +53,125 @@ const CMSList = () => {
     setFilters,
     pageIndex,
     pageSize,
-  } = useResourceList<User>('profiles', {
-    defaultQuery: { pageIndex: 0, pageSize: 10 },
+  } = useResourceList<IPostResponse>('cms-pages', {
+    defaultQuery: { pageIndex: 0, pageSize: 10, search: '' },
   });
-
-  const debouncedFilterChange = useDebounce(
-    (newFilters: Record<string, any>) => {
-      setFilters((prev) => ({ ...prev, ...newFilters, pageIndex: 0 }));
-    },
-    500,
-  );
-
-  const userData = useMemo(
-    () =>
-      users?.results?.map((user) => ({
-        id: user.id,
-        name: `${user.first_name} ${user.last_name}`,
-        email: user.email,
-        active_role: user.active_role,
-        gender: user.gender,
-        createdAt: user.createdAt,
-      })) || [],
-    [users?.results],
-  );
-
+  console.log('🚀 ~ CMSList ~ cmsData:', cmsData);
+  console.log('🚀 ~ CMSList ~ total:>>', total);
+  console.log('🚀 ~ CMSList ~ filters:', filters);
   const handleEdit = useCallback(
     (id: string) => {
-      router.push(`/users/add-update/${id}`);
+      router.push(`/cms/form?id=${id}`);
     },
     [router],
   );
 
   const handleDeleteClick = useCallback((id: string) => {
-    setModalState({ type: 'delete', userId: id, open: true });
+    setModalState({ type: 'delete', cmsId: id, open: true });
   }, []);
 
   const handleConfirmDelete = useCallback(async () => {
-    if (modalState.type === 'delete' && modalState.userId) {
-      try {
-        // Add your delete API call here
-        console.log('Deleting user:', modalState.userId);
-        // await deleteUser(modalState.userId);
-      } catch (error) {
-        console.error('Error deleting user:', error);
-      } finally {
-        setModalState({ type: null, userId: null, open: false });
-      }
+    if (modalState.type !== 'delete' || !modalState.cmsId) return;
+    try {
+      deleteCMS({ id: modalState.cmsId });
+    } catch (err) {
+      console.error('Error deleting CMS:', err);
+    } finally {
+      setModalState(DEFAULT_MODAL_STATE);
     }
   }, [modalState]);
 
-  const handlePaginationChange = useCallback(
-    (newPagination: { pageIndex: number; pageSize: number }) => {
-      setFilters((prev) => ({
-        ...prev,
-        pageIndex: newPagination.pageIndex,
-        pageSize: newPagination.pageSize,
-      }));
+  const { mutate: deleteCMS, isPending: isCreating } = useDeleteResource<Post>(
+    `cms-pages`,
+    {
+      onSuccess: () => {
+        toast.success('CMS deleted successfully');
+        setModalState(DEFAULT_MODAL_STATE);
+        queryClient.invalidateQueries({ queryKey: ['cms-pages'] });
+      },
+      onError: (error) => {
+        toast.error(error?.message || 'Failed to delete CMS');
+      },
     },
-    [setFilters],
   );
 
-  const columns: ColumnDef<Post>[] = [
-    {
-      accessorKey: 's.n.',
-      header: 'S.N.',
-    },
-    {
-      accessorKey: 'title',
-      header: 'Title',
-    },
-    {
-      accessorKey: 'content',
-      header: 'Content',
-      enableSorting: false,
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-    },
-    {
-      accessorKey: 'createdAt',
-      header: 'Created At',
-    },
-    {
-      id: 'actions',
-      cell: ({ row }) => (
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={() => handleEdit(row.original)}>
-            Edit
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={() => handleDeleteClick(row.original.id)}
-          >
-            Delete
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const columns = useMemo<ColumnDef<Post>[]>(
+    () => [
+      {
+        accessorKey: 's.n.',
+        header: 'S.N.',
+        enableSorting: false,
 
-  if (isLoading) return <div className="container py-10">Loading...</div>;
-  if (error)
-    return <div className="container py-10">Error: Something went wrong</div>;
+        cell: ({ row }) => (
+          <TableSN
+            currentPage={+filters?.offset! + 1}
+            pageSize={+filters?.limit!}
+            index={row.index}
+          />
+        ),
+      },
+      {
+        accessorKey: 'title',
+        header: 'Title',
+      },
+      {
+        accessorKey: 'content',
+        header: 'Content',
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'is_active',
+        header: 'Status',
+        cell: ({ getValue }) => (getValue<boolean>() ? 'Active' : 'Inactive'),
+      },
+      {
+        accessorKey: 'created_at',
+        header: 'Created At',
+        cell: ({ getValue }) =>
+          new Date(getValue<string>()).toLocaleDateString(),
+      },
+      {
+        id: 'actions',
+        cell: ({ row }) => {
+          const cms = row.original;
+          return (
+            <ActionMenu
+              actions={[
+                {
+                  label: 'Edit',
+                  onClick: handleEdit,
+                  variant: 'ghost',
+                },
+                {
+                  label: 'Delete',
+                  onClick: handleDeleteClick,
+                  variant: 'danger',
+                },
+              ]}
+              id={cms.id}
+            />
+          );
+        },
+      },
+    ],
+    [handleEdit, handleDeleteClick],
+  );
+  const handleRowsPerPageChange = (pageSize: number | string) => {
+    setFilters({ limit: Number(pageSize) });
+    setFilters({ pageIndex: 0 });
+  };
+
+  const handlePageChange = (page: number) => {
+    setFilters({ pageIndex: page });
+  };
+
+  if (isLoading) {
+    return <div className="container py-10">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="container py-10">Error:</div>;
+  }
 
   return (
     <div className="container wrapper">
@@ -161,32 +181,21 @@ const CMSList = () => {
         actionPath="/cms/form"
       />
 
+      <div className="flex justify-end mb-4">
+        <SearchInput
+          onChange={(value) => setFilters({ search: value })}
+          placeholder="Search by title"
+        />
+      </div>
       <DataTable
-        data={userData}
         columns={columns}
-        pagination={{
-          state: { pageIndex, pageSize },
-          onPaginationChange: handlePaginationChange,
-          rowCount: total || 0,
-        }}
-        sorting={{
-          state: sorting,
-          onSortingChange: setSorting,
-        }}
-        columnVisibility={{
-          state: columnVisibility,
-          onColumnVisibilityChange: setColumnVisibility,
-        }}
-        filters={filters}
-        onFilterChange={debouncedFilterChange}
-        headerControls={
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              Filter by date
-            </Button>
-          </div>
-        }
+        data={cmsData?.results || []}
+        key={Math.random()}
+        totalRows={cmsData?.count || 0}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handleRowsPerPageChange}
+        itemsPerPage={pageSize}
+        currentPage={pageIndex + 1}
       />
 
       <ConfirmationModal
@@ -194,13 +203,9 @@ const CMSList = () => {
         setOpen={(open) => setModalState((prev) => ({ ...prev, open }))}
         handleConfirm={handleConfirmDelete}
         content={{
-          title: 'Delete User',
+          title: 'Delete CMS Page',
           description:
-            'Are you sure you want to delete this user? This action cannot be undone.',
-
-          // // confirmText: 'Delete',
-          // confirmText: 'Delete',
-          // cancelText: 'Cancel',
+            'Are you sure you want to delete this CMS page? This action cannot be undone.',
         }}
       />
     </div>

@@ -28,12 +28,12 @@ export const ConfirmationModal = ({
       <DialogTrigger asChild>Open</DialogTrigger>
       <DialogContent
         id="dialogContent"
-        className="bg-primary-900"
+        className="bg-white border-none"
         role="dialog"
       >
-        <DialogTitle className="text-gray-100">{content.title}</DialogTitle>
+        <DialogTitle className="text-primary">{content.title}</DialogTitle>
         {content.description && (
-          <DialogDescription className="text-[16px] text-gray-100">
+          <DialogDescription className="text-[16px] text-gray-800">
             {content.description}
           </DialogDescription>
         )}
@@ -50,6 +50,7 @@ export const ConfirmationModal = ({
 
             <Button
               size="default"
+              variant={'outline'}
               onClick={handleOpenChange}
               aria-label="Cancel"
             >
