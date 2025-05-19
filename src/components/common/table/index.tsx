@@ -27,6 +27,7 @@ import {
 import { cn } from '@/lib/utils';
 import { DataTableColumnHeader } from './dataTableColumnHeader';
 import { DataTableNoResults } from './dataTableNoResults';
+// import { DataTablePagination } from './dataTablePagination';
 import TablePagination from './dataTablePagination';
 import { DataTableToolbar } from './dataTableToolbar';
 
@@ -187,13 +188,12 @@ export function DataTable<TData>({
       {pagination && table.getPageCount() > 1 && (
         <TablePagination
           currentPage={table.getState().pagination.pageIndex + 1}
-          onPageChange={table.setPageIndex}
-          rowsPerPage={table.getState().pagination.pageSize}
           totalRows={table.getRowCount()}
+          rowsPerPage={table.getState().pagination.pageSize}
+          onPageChange={table.setPageIndex}
+          onRowsPerPageChange={table.setPageSize as any}
           canPreviousPage={table.getCanPreviousPage()}
           canNextPage={table.getCanNextPage()}
-          onRowsPerPageChange={table.setPageSize as any}
-          key={table.getState().pagination.pageIndex}
         />
       )}
     </div>

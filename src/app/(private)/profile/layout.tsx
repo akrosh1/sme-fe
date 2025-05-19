@@ -1,0 +1,36 @@
+'use client';
+
+import { Header } from '@/components/common/Header';
+import { Sidebar } from '@/components/common/Sidebar';
+import useGlobalState from '@/hooks/useGlobalState';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { access: token } = useGlobalState();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!token) {
+      router.replace('/login');
+    }
+  }, [token, router]);
+
+  if (!token) {
+    return null;
+  }
+
+  return (
+    <div className="flex overflow-hidden h-screen">
+      <Sidebar />
+      <div className="flex-1 flex flex-col h-[calc(100vh)] overflow-hidden">
+        <Header />
+        <main className="flex-1 p-4 pb-10>">{children}</main>
+      </div>
+    </div>
+  );
+}

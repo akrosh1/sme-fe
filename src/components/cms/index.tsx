@@ -2,23 +2,14 @@
 
 import { useResourceList } from '@/hooks/useAPIManagement';
 import { useDebounce } from '@/hooks/useDebounce';
-import capitalize from '@/utils/capitalizeTextCase';
 import type { ColumnDef } from '@tanstack/react-table';
-import { CalendarIcon, MoreHorizontal } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { ConfirmationModal } from '../common/modal/confirmationModal';
 import PageHeader from '../common/PageHeader';
 import { DataTable } from '../common/table';
-import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
 
 interface User {
   id: string;
@@ -29,6 +20,14 @@ interface User {
   gender: string;
   createdAt: string;
 }
+
+export type Post = {
+  id: string;
+  title: string;
+  content: string;
+  status: 'draft' | 'published' | 'archived';
+  createdAt: string;
+};
 
 const CMSList = () => {
   const router = useRouter();
@@ -110,98 +109,56 @@ const CMSList = () => {
     [setFilters],
   );
 
-  const columns: ColumnDef<User>[] = useMemo(
-    () => [
-      {
-        accessorKey: 'name',
-        header: 'Name',
-        cell: ({ row }) => {
-          const name = row.getValue('name') as string;
-          return name && capitalize(name);
-        },
-      },
-      {
-        accessorKey: 'email',
-        header: 'Email',
-      },
-      {
-        accessorKey: 'active_role',
-        header: 'Role',
-        cell: ({ row }) => {
-          const role = row.getValue('active_role') as string;
-          return (
-            <Badge
-              variant={
-                role === 'admin'
-                  ? 'destructive'
-                  : role === 'EDITOR'
-                    ? 'secondary'
-                    : 'default'
-              }
-            >
-              {capitalize(role)}
-            </Badge>
-          );
-        },
-      },
-      {
-        accessorKey: 'gender',
-        header: 'Gender',
-        cell: ({ row }) => {
-          const gender = row.getValue('gender') as string;
-          return (
-            <Badge
-              variant={
-                gender === 'male'
-                  ? 'default'
-                  : gender === 'female'
-                    ? 'destructive'
-                    : 'outline'
-              }
-            >
-              {capitalize(gender)}
-            </Badge>
-          );
-        },
-      },
-      {
-        id: 'actions',
-        cell: ({ row }) => {
-          const user = row.original;
-          return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => handleEdit(user.id)}>
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDeleteClick(user.id)}>
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
-        },
-      },
-    ],
-    [handleEdit, handleDeleteClick],
-  );
+  const columns: ColumnDef<Post>[] = [
+    {
+      accessorKey: 's.n.',
+      header: 'S.N.',
+    },
+    {
+      accessorKey: 'title',
+      header: 'Title',
+    },
+    {
+      accessorKey: 'content',
+      header: 'Content',
+      enableSorting: false,
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+    },
+    {
+      accessorKey: 'createdAt',
+      header: 'Created At',
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => (
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={() => handleEdit(row.original)}>
+            Edit
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => handleDeleteClick(row.original.id)}
+          >
+            Delete
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   if (isLoading) return <div className="container py-10">Loading...</div>;
   if (error)
-    return <div className="container py-10">Error: Something went wron g</div>;
+    return <div className="container py-10">Error: Something went wrong</div>;
 
   return (
     <div className="container wrapper">
       <PageHeader
-        title="Users"
-        actionText="Add User"
-        actionPath="/users/add-update"
+        title="CMS List"
+        actionText="Add CMS"
+        actionPath="/cms/form"
       />
 
       <DataTable

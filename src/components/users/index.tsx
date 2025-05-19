@@ -53,6 +53,7 @@ const UsersTable = () => {
   } = useResourceList<User>('profiles', {
     defaultQuery: { pageIndex: 0, pageSize: 10 },
   });
+  console.log('🚀 ~ UsersTable ~ users:', users);
 
   const debouncedFilterChange = useDebounce(
     (newFilters: Record<string, any>) => {
@@ -76,7 +77,7 @@ const UsersTable = () => {
 
   const handleEdit = useCallback(
     (id: string) => {
-      router.push(`/users/add-update/${id}`);
+      router.push(`/users/add-update?userId=${id}`);
     },
     [router],
   );
@@ -194,7 +195,7 @@ const UsersTable = () => {
 
   if (isLoading) return <div className="container py-10">Loading...</div>;
   if (error)
-    return <div className="container py-10">Error: Something went wron g</div>;
+    return <div className="container py-10">Error: Something went wrong</div>;
 
   return (
     <div className="container wrapper">
