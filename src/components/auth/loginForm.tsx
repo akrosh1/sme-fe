@@ -1,166 +1,34 @@
-// 'use client';
-
-// import { Button } from '@/components/ui/button';
-// import { Card, CardContent } from '@/components/ui/card';
-// import { Input } from '@/components/ui/input';
-// import { Label } from '@/components/ui/label';
-// import { useCreateResource } from '@/hooks/useAPIManagement';
-// import { cn } from '@/lib/utils';
-// import {
-//   loginFailure,
-//   loginStart,
-//   loginSuccess,
-// } from '@/store/slices/authSlice';
-// import { useRouter } from 'next/navigation';
-// import { useForm } from 'react-hook-form';
-// import { useDispatch } from 'react-redux';
-// import { toast } from 'sonner';
-// import loginImg from '../../../public/assets/signIn.svg';
-
-// interface LoginFormInputs {
-//   email: string;
-//   password: string;
-// }
-
-// interface LoginResponse {
-//   active_role: string;
-//   access: string;
-// }
-
-// export function LoginForm({
-//   className,
-//   ...props
-// }: React.ComponentProps<'div'>) {
-//   const router = useRouter();
-//   const dispatch = useDispatch();
-//   const {
-//     register,
-//     handleSubmit,
-//     formState: { isSubmitting },
-//   } = useForm<LoginFormInputs>();
-
-//   const { mutate: login, isPending: isCreating } =
-//     useCreateResource<LoginResponse>('/auth/token/', {
-//       onSuccess: (data) => {
-//         dispatch(
-//           loginSuccess({
-//             active_role: data.data.active_role,
-//             token: data.data.access,
-//           }),
-//         );
-//         toast.success('Login successful');
-//         router.push('/dashboard');
-//       },
-//       onError: (error) => {
-//         dispatch(loginFailure(error?.message || 'Failed to login'));
-//         toast.error(error?.message || 'Invalid credentials. Please try again.');
-//       },
-//     });
-
-//   const onSubmit = async (data: LoginFormInputs) => {
-//     dispatch(loginStart());
-//     login(data);
-//   };
-
-//   return (
-//     <div className={cn('flex flex-col gap-6', className)} {...props}>
-//       <Card className="overflow-hidden py-0 md:w-3xl">
-//         <CardContent className="grid md:grid-cols-2 p-0">
-//           <form onSubmit={handleSubmit(onSubmit)} className="p-6 md:p-8">
-//             <div className="flex flex-col gap-6">
-//               <div className="flex flex-col items-center text-center">
-//                 <h1 className="text-2xl font-bold">Welcome back</h1>
-//                 <p className="text-balance text-muted-foreground">
-//                   Login to your Acme Inc account
-//                 </p>
-//               </div>
-
-//               <div className="grid gap-2">
-//                 <Label htmlFor="email">Email</Label>
-//                 <Input
-//                   id="email"
-//                   type="email"
-//                   placeholder="m@example.com"
-//                   {...register('email', { required: true })}
-//                 />
-//               </div>
-
-//               <div className="grid gap-2">
-//                 <div className="flex items-center">
-//                   <Label htmlFor="password">Password</Label>
-//                   <a
-//                     href="/forgot-password"
-//                     className="ml-auto text-sm underline-offset-2 hover:underline"
-//                   >
-//                     Forgot your password?
-//                   </a>
-//                 </div>
-//                 <Input
-//                   id="password"
-//                   type="password"
-//                   {...register('password', { required: true })}
-//                 />
-//               </div>
-
-//               <Button
-//                 type="submit"
-//                 className="w-full"
-//                 disabled={isSubmitting || isCreating}
-//               >
-//                 {isSubmitting || isCreating ? 'Logging in...' : 'Login'}
-//               </Button>
-
-//               <div className="text-center text-sm">
-//                 Don't have an account?{' '}
-//                 <a href="/register" className="underline underline-offset-4">
-//                   Sign up
-//                 </a>
-//               </div>
-//             </div>
-//           </form>
-
-//           <div className="relative hidden bg-muted md:block">
-//             <img
-//               src={loginImg.src}
-//               alt="Image"
-//               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-//             />
-//           </div>
-//         </CardContent>
-//       </Card>
-
-//       <div className="text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
-//         By clicking continue, you agree to our <a href="#">Terms of Service</a>{' '}
-//         and <a href="#">Privacy Policy</a>.
-//       </div>
-//     </div>
-//   );
-// }
-
 'use client';
+
+import type React from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useCreateResource } from '@/hooks/useAPIManagement';
 import useGlobalState from '@/hooks/useGlobalState';
-import { cn } from '@/lib/utils';
 import {
   loginFailure,
   loginStart,
   loginSuccess,
 } from '@/store/slices/authSlice';
+import { zodResolver } from '@hookform/resolvers/zod';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
-import loginImg from '../../../public/assets/signIn.svg';
+import { z } from 'zod';
+import { FormElement } from '../common/form/formElement';
 
-interface LoginFormInputs {
-  email: string;
-  password: string;
-}
+const loginSchema = z.object({
+  email: z
+    .string()
+    .email('Please enter a valid email address')
+    .min(1, 'Email is required'),
+  password: z.string().min(6, 'Password must be at least 6 characters').max(20),
+});
+
+type LoginFormInputs = z.infer<typeof loginSchema>;
 
 interface LoginResponse {
   active_role: string;
@@ -175,13 +43,16 @@ export function LoginForm({
   const router = useRouter();
   const dispatch = useDispatch();
   const { setAccess } = useGlobalState();
-  const {
-    register,
-    handleSubmit,
-    formState: { isSubmitting },
-  } = useForm<LoginFormInputs>();
 
-  const { mutate: login, isPending: isCreating } =
+  const form = useForm<LoginFormInputs>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const { mutate: login, isPending: isLoggingIn } =
     useCreateResource<LoginResponse>('/auth/token/', {
       onSuccess: (data) => {
         const { access, active_role, refresh: refreshToken } = data.data;
@@ -208,67 +79,53 @@ export function LoginForm({
   };
 
   return (
-    <div className={cn('flex flex-col gap-6', className)} {...props}>
-      <Card className="overflow-hidden py-0 md:w-3xl">
+    <div className="flex flex-col gap-6" {...props}>
+      <Card className="overflow-hidden py-0 md:w-3xl border-none">
         <CardContent className="grid md:grid-cols-2 p-0">
-          <form onSubmit={handleSubmit(onSubmit)} className="p-6 md:p-8">
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col items-center text-center">
-                <h1 className="text-2xl font-bold">Welcome back</h1>
-                <p className="text-balance text-muted-foreground">
-                  Login to your Acme Inc account
-                </p>
-              </div>
+          <FormProvider {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 md:p-8">
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col items-center text-center">
+                  <h1 className="text-2xl font-bold">Welcome back</h1>
+                  <p className="text-balance text-muted-foreground">
+                    Login to your Acme Inc account
+                  </p>
+                </div>
+                <FormElement type="email" name="email" label="Email" />
+                <FormElement type="password" name="password" label="Password" />
+                <a
+                  href="/forgot-password"
+                  className="ml-auto text-sm underline-offset-2 hover:underline"
+                >
+                  Forgot your password?
+                </a>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={form.formState.isSubmitting || isLoggingIn}
+                >
+                  {form.formState.isSubmitting || isLoggingIn
+                    ? 'Logging in...'
+                    : 'Login'}
+                </Button>
 
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  {...register('email', { required: true })}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="/forgot-password"
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
-                  >
-                    Forgot your password?
+                <div className="text-center text-sm">
+                  Don't have an account?{' '}
+                  <a href="/register" className="underline underline-offset-4">
+                    Sign up
                   </a>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  {...register('password', { required: true })}
-                />
               </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isSubmitting || isCreating}
-              >
-                {isSubmitting || isCreating ? 'Logging in...' : 'Login'}
-              </Button>
-
-              <div className="text-center text-sm">
-                Don't have an account?{' '}
-                <a href="/register" className="underline underline-offset-4">
-                  Sign up
-                </a>
-              </div>
-            </div>
-          </form>
+            </form>
+          </FormProvider>
 
           <div className="relative hidden bg-muted md:block">
-            <img
-              src={loginImg.src}
-              alt="Image"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+            <Image
+              src="/assets/signIn.svg"
+              alt="Login illustration"
+              fill
+              className="object-cover dark:brightness-[0.2] dark:grayscale"
+              priority
             />
           </div>
         </CardContent>
