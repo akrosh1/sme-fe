@@ -3,6 +3,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
 @theme inline {
   --color-background: #f2f9ff;
   --color-foreground: #444444;
@@ -34,7 +40,7 @@
   --color-primary-foreground: #f3f3e0;
   --color-primary: #133e87;
   --color-popover-foreground: #133e87;
-  --color-popover: #cbdceb;
+  --color-popover: #f2f9ff;
   --color-card-foreground: #133e87;
   --color-card: #f2f9ff;
   --radius-sm: calc(var(--radius) - 4px);

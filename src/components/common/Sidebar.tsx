@@ -16,7 +16,6 @@ import {
   ChevronRight,
   FileCog,
   LayoutDashboardIcon,
-  LockIcon,
   Menu,
   SettingsIcon,
   ShieldUser,
@@ -59,20 +58,6 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     icon: <UsersIcon />,
     route: '/users',
     hasAccess: true,
-    dropdownItems: [
-      {
-        label: 'All Users',
-        icon: <UsersIcon />,
-        route: '/users',
-        hasAccess: true,
-      },
-      {
-        label: 'Permissions',
-        icon: <LockIcon />,
-        route: '/users/permission',
-        hasAccess: true,
-      },
-    ],
   },
   {
     label: 'Roles',

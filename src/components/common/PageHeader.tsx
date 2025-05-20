@@ -7,6 +7,7 @@ import { FC } from 'react';
 
 interface PageHeaderProps {
   title: string;
+  subTitle?: string;
   actionText?: string;
   actionPath?: string;
   className?: string;
@@ -14,6 +15,7 @@ interface PageHeaderProps {
 
 const PageHeader: FC<PageHeaderProps> = ({
   title,
+  subTitle,
   actionText = 'Add',
   actionPath,
   className = '',
@@ -22,9 +24,14 @@ const PageHeader: FC<PageHeaderProps> = ({
 
   return (
     <div className={`flex mb-5 items-center justify-between ${className}`}>
-      <h1 className="text-xl md:text-2xl font-bold mb-6">{title}</h1>
+      <div className="flex flex-col">
+        <h1 className="text-xl md:text-2xl font-bold">{title}</h1>
+        {subTitle && <p className="text-muted-foreground">{subTitle}</p>}
+      </div>
+
       {actionPath && (
         <Button
+          variant={'outline'}
           className="btn btn-primary cursor-pointer"
           onClick={() => router.push(actionPath)}
         >

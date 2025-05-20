@@ -54,7 +54,7 @@ export function ResetPasswordForm({
   });
 
   const { mutate: resetPassword, isPending: isLoading } =
-    useCreateResource<ResetPasswordResponse>('/auth/token/', {
+    useCreateResource<ResetPasswordResponse>('/users/reset-password/', {
       onSuccess: () => {
         toast.success('Password reset successfully!');
         router.push('/login');
@@ -71,28 +71,6 @@ export function ResetPasswordForm({
     }
     resetPassword(data);
   };
-
-  // const onSubmit = async (data: ResetPasswordFormInputs) => {
-  // if (!token) {
-  //   toast.error('Invalid reset token');
-  //   return;
-  // }
-
-  //   try {
-  //     await resetPassword({
-  //       token,
-  //       old_password: data.old_password,
-  //       password: data.password,
-  //     }).unwrap();
-  //     toast.success('Password reset successfully!');
-  //     router.push('/login');
-  //   } catch (error) {
-  //     toast.error(
-  //       error?.data?.error?.details ||
-  //         'Failed to reset password. The link may have expired.',
-  //     );
-  //   }
-  // };
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>

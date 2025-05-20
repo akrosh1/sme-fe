@@ -200,7 +200,11 @@ const CMSList = () => {
 
       <ConfirmationModal
         open={modalState.open}
-        setOpen={(open) => setModalState((prev) => ({ ...prev, open }))}
+        setOpen={
+          setModalState as unknown as React.Dispatch<
+            React.SetStateAction<boolean>
+          >
+        }
         handleConfirm={handleConfirmDelete}
         content={{
           title: 'Delete CMS Page',

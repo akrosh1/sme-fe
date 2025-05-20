@@ -1,591 +1,324 @@
-// 'use client';
-// import { Button } from '@/components/ui/button';
-// import { Skeleton } from '@/components/ui/skeleton';
-// import { useResourceList } from '@/hooks/useAPIManagement';
-// import { useMutation } from '@tanstack/react-query';
-// import { useEffect, useState } from 'react';
-// // import { toast } from 'react-hot-toast';
-// // import { DataTableSkeleton } from '../common/skeleton/dataTableSkeleton';
-// // import AddRolesPopup from '../components/CreateRoleModal';
-// // import { PermissionCheckbox } from './PermissionCheckbox';
-
-// interface Permission {
-//   [key: string]: string;
-// }
-
-// interface PermissionGroup {
-//   [key: string]: Permission[];
-// }
-
-// interface PermissionState {
-//   [key: string]: {
-//     [key: string]: number;
-//   };
-// }
-
-// interface User {
-
-// }
-
-// const StaffPermissions = () => {
-//   const [selectedStaff, setSelectedStaff] = useState<string>('');
-//   const [permissions, setPermissions] = useState<PermissionGroup>({});
-//   const [checkedPermissions, setCheckedPermissions] = useState<PermissionState>(
-//     {},
-//   );
-//   const [openCreateRoleModal, setOpenCreateRoleModal] = useState(false);
-//   const {
-//     data: staffPermissionData,
-//     total,
-//     isLoading,
-//     error,
-//     filters,
-//     setFilters,
-//     pageIndex,
-//     pageSize,
-//   } = useResourceList<User>('user-permissions', {
-//     defaultQuery: { pageIndex: 0, pageSize: 10 },
-//   });
-//   console.log(
-//     '🚀 ~ StaffPermissions ~ staffPermissionData:',
-//     staffPermissionData,
-//   );
-
-//   // const { data: rolesData } = useQuery({
-//   //   queryKey: ['get-roles-data'],
-//   //   queryFn: getPermissionRoles,
-//   // });
-
-//   // const {
-//   //   data: staffPermissionData,
-//   //   isLoading: isLoadingPermissions,
-//   //   refetch: refetchPermission,
-//   // } = useQuery({
-//   //   queryKey: ['staff-permission'],
-//   //   queryFn: () => getStaffPermission(selectedStaff),
-//   //   enabled: !!selectedStaff,
-//   // });
-
-//   // const { data: getRolesData } = useQuery({
-//   //   queryKey: ['staff-roles-permission'],
-//   //   queryFn: () => getRolesPermission(selectedStaff),
-//   //   enabled: !!selectedStaff,
-//   // });
-
-//   useEffect(() => {
-//     if (
-//       staffPermissionData &&
-//       staffPermissionData.data &&
-//       getRolesData &&
-//       getRolesData.data
-//     ) {
-//       const rolePermissions = getRolesData.data.role[0].permissions;
-//       const initialCheckedState: PermissionState = {};
-
-//       // Initialize checkedPermissions based on staffPermissionData and rolesData
-//       Object.entries(staffPermissionData.data).forEach(([category, perms]) => {
-//         initialCheckedState[category] = {};
-//         perms.forEach((perm: Permission) => {
-//           const [id] = Object.keys(perm);
-//           const permissionId = parseInt(id, 10);
-
-//           // Check if the permission ID exists in rolesData and has status: 1
-//           const isChecked = Object.values(rolePermissions).some(
-//             (permGroup: any) =>
-//               Object.values(permGroup).some(
-//                 (permValue) =>
-//                   permValue.id === permissionId && permValue.status === 1,
-//               ),
-//           );
-
-//           initialCheckedState[category][id] = isChecked ? 1 : 0;
-//         });
-//       });
-
-//       setCheckedPermissions(initialCheckedState);
-//     }
-//   }, [staffPermissionData, getRolesData]);
-
-//   const updateMutation = useMutation({
-//     mutationFn: (data: PermissionState) =>
-//       updateStaffPermission({ permissions: data }, selectedStaff),
-//     onSuccess: () => {
-//       refetchPermission();
-//       toast.success('Staff permissions have been successfully updated');
-//     },
-//     onError: (error) => {
-//       toast.error('Failed to update staff permissions. Please try again');
-//       console.error('Error updating permissions:', error);
-//     },
-//   });
-
-//   const handleStaffSelect = (staffId: string) => {
-//     setSelectedStaff(staffId);
-//   };
-
-//   const handlePermissionChange = (
-//     category: string,
-//     id: string,
-//     checked: boolean,
-//   ) => {
-//     setCheckedPermissions((prev) => ({
-//       ...prev,
-//       [category]: {
-//         ...prev[category],
-//         [id]: checked ? 1 : 0,
-//       },
-//     }));
-//   };
-
-//   const handleSubmit = () => {
-//     if (selectedStaff) {
-//       updateMutation.mutate(checkedPermissions);
-//     }
-//   };
-
-//   if (isLoadingPermissions) {
-//     return (
-//       <div className="flex flex-col gap-6 max-w-7xl mx-auto">
-//         <Skeleton className="h-12 w-80" />
-//         <Skeleton className="h-6 w-72" />
-//         <DataTableSkeleton columns={5} rows={8} />
-//       </div>
-//     );
-//   }
-
-//   console.log(staffPermissionData?.data, 'kamallll');
-
-//   return (
-//     <div className="max-w-7xl mx-auto">
-//       <div className="flex items-center justify-between mb-6">
-//         <h1 className="text-2xl font-bold mb-6">Dynamic Staff Permissions</h1>
-//         <Button
-//           variant="outline"
-//           className="dark:bg-grey-700 dark:text-white"
-//           onClick={() => setOpenCreateRoleModal(true)}
-//         >
-//           Create Roles
-//         </Button>
-//       </div>
-//       <div className="mb-6 flex gap-2 items-center">
-//         <h6 className="font-semibold text-grey-900">Staff</h6>
-//         <SelectComponent
-//           variant="outlined"
-//           options={
-//             rolesData?.data.map((staff: GetRolesDaum) => ({
-//               label: staff.name as string,
-//               value: staff.id.toString() as string,
-//             })) || []
-//           }
-//           defaultValue={selectedStaff}
-//           onValueChange={handleStaffSelect}
-//         />
-//       </div>
-
-//       {updateMutation.isPending && (
-//         <div className="text-blue-500">Updating permissions...</div>
-//       )}
-
-//       <div className="space-y-4 rounded-xl overflow-hidden border p-4">
-//         {Object.entries(staffPermissionData?.data || {}).map(
-//           ([category, perms]) => (
-//             <PermissionCheckbox
-//               key={category}
-//               label={category}
-//               permissions={perms}
-//               checkedPermissions={checkedPermissions[category] || {}}
-//               onChange={(id, checked) =>
-//                 handlePermissionChange(category, id, checked)
-//               }
-//             />
-//           ),
-//         )}
-//       </div>
-//       <div className="mt-5 flex justify-center w-full">
-//         <Button
-//           onClick={handleSubmit}
-//           disabled={updateMutation.isPending || !selectedStaff}
-//         >
-//           {updateMutation.isPending ? 'Updating...' : 'Submit Permissions'}
-//         </Button>
-//       </div>
-//       {openCreateRoleModal && (
-//         <AddRolesPopup
-//           open={openCreateRoleModal}
-//           setOpen={setOpenCreateRoleModal}
-//         />
-//       )}
-//     </div>
-//   );
-// };
-
-// export default StaffPermissions;
-
 'use client';
 
-// import {
-//   PermissionCheckbox,
-//   type Permission,
-// } from '@/components/permission-checkbox';
-// import { RoleSelector, type Role } from '@/components/role-selector';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, RefreshCw } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
-  Permission,
-  PermissionCheckbox,
-} from './components/permissionCheckbox';
-import { Role, RoleSelector } from './components/roleSelector';
+  useCreateResource,
+  useDeleteResource,
+  useResourceList,
+  useUpdateResource,
+} from '@/hooks/useAPIManagement';
+import { QueryClient } from '@tanstack/react-query';
+import type { ColumnDef } from '@tanstack/react-table';
+import { useRouter } from 'next/navigation';
+import { useCallback, useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import { ConfirmationModal } from '../common/modal/confirmationModal';
+import PageHeader from '../common/PageHeader';
+import { SearchInput } from '../common/searchComponent';
+import { DataTable } from '../common/table';
+import ActionMenu from '../common/table/actionMenu';
+import TableSN from '../common/table/tableSN';
 
-// Type definitions
-interface PermissionGroup {
-  [key: string]: Permission[];
+// Define interfaces
+interface IPostResponse {
+  total: number;
+  count: number;
+  results: Post[];
 }
 
-interface PermissionState {
-  [key: string]: Record<string, number>;
+interface Post {
+  id: string;
+  name: string;
+  is_active?: boolean;
+  created_at?: string;
 }
 
-// Mock API functions (replace with your actual API calls)
-const fetchRoles = async (): Promise<Role[]> => {
-  // Simulate API call
-  return [
-    { id: '1', name: 'Administrator' },
-    { id: '2', name: 'Editor' },
-    { id: '3', name: 'Viewer' },
-  ];
+interface ModalState {
+  type: 'delete' | 'add' | 'edit' | null;
+  cmsId: string | null;
+  open: boolean;
+  roleData?: Post | null;
+}
+
+const DEFAULT_MODAL_STATE: ModalState = {
+  type: null,
+  cmsId: null,
+  open: false,
+  roleData: null,
 };
 
-const fetchPermissions = async (roleId: string): Promise<PermissionGroup> => {
-  // Simulate API call
-  return {
-    'User Management': [
-      {
-        id: '1',
-        name: 'Create Users',
-        description: 'Ability to create new user accounts',
-      },
-      {
-        id: '2',
-        name: 'Edit Users',
-        description: 'Ability to modify existing user accounts',
-      },
-      {
-        id: '3',
-        name: 'Delete Users',
-        description: 'Ability to remove user accounts from the system',
-      },
-      {
-        id: '4',
-        name: 'View Users',
-        description: 'Ability to view user account details',
-      },
-    ],
-    'Content Management': [
-      {
-        id: '5',
-        name: 'Create Content',
-        description: 'Ability to create new content',
-      },
-      {
-        id: '6',
-        name: 'Edit Content',
-        description: 'Ability to modify existing content',
-      },
-      {
-        id: '7',
-        name: 'Delete Content',
-        description: 'Ability to remove content from the system',
-      },
-      {
-        id: '8',
-        name: 'Publish Content',
-        description: 'Ability to make content publicly visible',
-      },
-    ],
-    'System Settings': [
-      {
-        id: '9',
-        name: 'View Settings',
-        description: 'Ability to view system settings',
-      },
-      {
-        id: '10',
-        name: 'Modify Settings',
-        description: 'Ability to change system settings',
-      },
-      {
-        id: '11',
-        name: 'Manage Backups',
-        description: 'Ability to create and restore system backups',
-      },
-    ],
-  };
-};
+const RolesList = () => {
+  const [modalState, setModalState] = useState<ModalState>(DEFAULT_MODAL_STATE);
+  const [roleName, setRoleName] = useState('');
+  const queryClient = new QueryClient();
+  const router = useRouter();
 
-const fetchRolePermissions = async (
-  roleId: string,
-): Promise<Record<string, number>> => {
-  // Simulate API call
-  if (roleId === '1') {
-    // Administrator
-    return {
-      '1': 1,
-      '2': 1,
-      '3': 1,
-      '4': 1,
-      '5': 1,
-      '6': 1,
-      '7': 1,
-      '8': 1,
-      '9': 1,
-      '10': 1,
-      '11': 1,
-    };
-  } else if (roleId === '2') {
-    // Editor
-    return {
-      '1': 0,
-      '2': 0,
-      '3': 0,
-      '4': 1,
-      '5': 1,
-      '6': 1,
-      '7': 0,
-      '8': 1,
-      '9': 1,
-      '10': 0,
-      '11': 0,
-    };
-  } else {
-    // Viewer
-    return {
-      '1': 0,
-      '2': 0,
-      '3': 0,
-      '4': 1,
-      '5': 0,
-      '6': 0,
-      '7': 0,
-      '8': 0,
-      '9': 1,
-      '10': 0,
-      '11': 0,
-    };
-  }
-};
+  const {
+    data: cmsData,
+    isLoading,
+    error,
+    filters,
+    setFilters,
+    pageIndex,
+    pageSize,
+  } = useResourceList<IPostResponse>('user-groups', {
+    defaultQuery: { pageIndex: 0, pageSize: 10, search: '' },
+  });
 
-const updateRolePermissions = async (
-  roleId: string,
-  permissions: PermissionState,
-): Promise<void> => {
-  // Simulate API call
-  console.log('Updating permissions for role', roleId, permissions);
-  // In a real app, you would send this data to your API
-  return new Promise((resolve) => setTimeout(resolve, 1000));
-};
+  // const handleEdit = useCallback(
+  //   (id: string) => {
+  //     const roleToEdit = cmsData?.results.find((role) => role.id === id);
+  //     if (roleToEdit) {
+  //       setRoleName(roleToEdit.name);
+  //       setModalState({
+  //         type: 'edit',
+  //         cmsId: id,
+  //         open: true,
+  //         roleData: roleToEdit,
+  //       });
+  //     }
+  //   },
+  //   [cmsData?.results],
+  // );
 
-export default function StaffPermissions() {
-  // State
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [selectedRole, setSelectedRole] = useState<string>('');
-  const [permissionGroups, setPermissionGroups] = useState<PermissionGroup>({});
-  const [checkedPermissions, setCheckedPermissions] = useState<PermissionState>(
-    {},
+  const handleDeleteClick = useCallback((id: string) => {
+    setModalState({ type: 'delete', cmsId: id, open: true });
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (modalState.type !== 'delete' || !modalState.cmsId) return;
+    try {
+      deleteCMS({ id: modalState.cmsId });
+    } catch (err) {
+      console.error('Error deleting role:', err);
+    }
+  }, [modalState]);
+
+  const handleEdit = useCallback(
+    (id: string) => {
+      router.push(`/roles/add-permission?id=${id}`);
+    },
+    [router],
   );
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCreatingRole, setIsCreatingRole] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
 
-  // Load roles on component mount
-  useEffect(() => {
-    const loadRoles = async () => {
-      try {
-        const rolesData = await fetchRoles();
-        setRoles(rolesData);
-        if (rolesData.length > 0) {
-          setSelectedRole(rolesData[0].id);
-        }
-      } catch (error) {
-        console.error('Error loading roles:', error);
-        toast.error('Failed to load roles. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadRoles();
-  }, [toast]);
-
-  // Load permissions when a role is selected
-  useEffect(() => {
-    if (!selectedRole) return;
-
-    const loadPermissions = async () => {
-      setIsLoading(true);
-      try {
-        // Load permission structure
-        const permissionsData = await fetchPermissions(selectedRole);
-        setPermissionGroups(permissionsData);
-
-        // Load role's current permissions
-        const rolePermissions = await fetchRolePermissions(selectedRole);
-
-        // Initialize checked permissions state
-        const initialCheckedState: PermissionState = {};
-
-        Object.entries(permissionsData).forEach(([category, permissions]) => {
-          initialCheckedState[category] = {};
-          permissions.forEach((perm) => {
-            initialCheckedState[category][perm.id] =
-              rolePermissions[perm.id] || 0;
-          });
-        });
-
-        setCheckedPermissions(initialCheckedState);
-      } catch (error) {
-        console.error('Error loading permissions:', error);
-        toast('Failed to load permissions. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadPermissions();
-  }, [selectedRole, toast]);
-
-  // Handle role selection
-  const handleRoleChange = (roleId: string) => {
-    setSelectedRole(roleId);
-  };
-
-  // Handle permission change
-  const handlePermissionChange = (
-    category: string,
-    id: string,
-    checked: boolean,
-  ) => {
-    setCheckedPermissions((prev) => ({
-      ...prev,
-      [category]: {
-        ...prev[category],
-        [id]: checked ? 1 : 0,
+  const { mutate: deleteCMS, isPending: isDeleting } = useDeleteResource<Post>(
+    `user-groups`,
+    {
+      onSuccess: () => {
+        toast.success('Role deleted successfully');
+        setModalState(DEFAULT_MODAL_STATE);
+        queryClient.invalidateQueries({ queryKey: ['user-groups'] });
       },
-    }));
+      onError: (error) => {
+        toast.error(error?.message || 'Failed to delete role');
+      },
+    },
+  );
+
+  const { mutate: createRole, isPending: isCreating } = useCreateResource<Post>(
+    'user-groups',
+    {
+      onSuccess: () => {
+        toast.success('Role created successfully');
+        setModalState(DEFAULT_MODAL_STATE);
+        setRoleName('');
+        queryClient.invalidateQueries({ queryKey: ['user-groups'] });
+      },
+      onError: (error) => {
+        toast.error(error?.message || 'Failed to create role');
+      },
+    },
+  );
+
+  const { mutate: updateRole, isPending: isUpdating } = useUpdateResource<Post>(
+    'user-groups',
+    {
+      onSuccess: () => {
+        toast.success('Role updated successfully');
+        setModalState(DEFAULT_MODAL_STATE);
+        setRoleName('');
+        queryClient.invalidateQueries({ queryKey: ['user-groups'] });
+      },
+      onError: (error) => {
+        toast.error(error?.message || 'Failed to update role');
+      },
+    },
+  );
+
+  const handleAddModalOpen = () => {
+    setRoleName('');
+    setModalState({ type: 'add', cmsId: null, open: true });
   };
 
-  // Handle form submission
-  const handleSubmit = async () => {
-    if (selectedRole) {
-      setIsUpdating(true);
-      try {
-        await updateRolePermissions(selectedRole, checkedPermissions);
-        toast('Permissions have been updated successfully.');
-      } catch (error) {
-        console.error('Error updating permissions:', error);
-        toast('Failed to update permissions. Please try again.');
-      } finally {
-        setIsUpdating(false);
-      }
+  const handleModalClose = () => {
+    setModalState(DEFAULT_MODAL_STATE);
+    setRoleName('');
+  };
+
+  const handleSaveRole = () => {
+    if (!roleName.trim()) {
+      toast.error('Role name is required');
+      return;
+    }
+
+    if (modalState.type === 'add') {
+      createRole({ name: roleName });
+    } else if (modalState.type === 'edit' && modalState.cmsId) {
+      updateRole({
+        id: modalState.cmsId,
+        name: roleName,
+      });
     }
   };
 
-  // Handle create role
-  const handleCreateRole = () => {
-    setIsCreatingRole(true);
-    // In a real app, you would show a modal or navigate to a create role page
-    toast('This would open a modal to create a new role.');
-    setTimeout(() => setIsCreatingRole(false), 1000);
+  const columns = useMemo<ColumnDef<Post>[]>(
+    () => [
+      {
+        accessorKey: 's.n.',
+        header: 'S.N.',
+        enableSorting: false,
+        cell: ({ row }) => (
+          <TableSN
+            currentPage={+filters?.offset! + 1}
+            pageSize={+filters?.limit!}
+            index={row.index}
+          />
+        ),
+      },
+      {
+        accessorKey: 'name',
+        header: 'Name',
+      },
+      {
+        id: 'actions',
+        cell: ({ row }) => {
+          const cms = row.original;
+          return (
+            <ActionMenu
+              actions={[
+                {
+                  label: 'Edit',
+                  onClick: handleEdit,
+                  variant: 'ghost',
+                },
+                {
+                  label: 'Delete',
+                  onClick: handleDeleteClick,
+                  variant: 'danger',
+                },
+              ]}
+              id={cms.id}
+            />
+          );
+        },
+      },
+    ],
+    [filters?.limit, filters?.offset, handleDeleteClick, handleEdit],
+  );
+
+  const handleRowsPerPageChange = (pageSize: number | string) => {
+    setFilters({ limit: Number(pageSize) });
+    setFilters({ pageIndex: 0 });
   };
 
+  const handlePageChange = (page: number) => {
+    setFilters({ pageIndex: page });
+  };
+
+  if (isLoading) {
+    return <div className="container py-10">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="container py-10">Error: Something went wrong</div>;
+  }
+
   return (
-    <div className="container mx-auto py-6 max-w-6xl">
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <CardTitle className="text-2xl">Role Permissions</CardTitle>
-              <CardDescription>
-                Manage permissions for different roles in your organization
-              </CardDescription>
+    <div className="container wrapper">
+      <div className="flex justify-between items-center mb-6">
+        <PageHeader title="Roles List" />
+        <Button onClick={handleAddModalOpen}>Add Role</Button>
+      </div>
+
+      <div className="flex justify-end mb-4">
+        <SearchInput
+          onChange={(value) => setFilters({ search: value })}
+          placeholder="Search by name"
+        />
+      </div>
+
+      <DataTable
+        columns={columns}
+        data={cmsData?.results || []}
+        key={Math.random()}
+        totalRows={cmsData?.count || 0}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handleRowsPerPageChange}
+        itemsPerPage={pageSize}
+        currentPage={pageIndex + 1}
+      />
+
+      {/* Role Form Modal */}
+      <Dialog
+        open={modalState.type === 'add' || modalState.type === 'edit'}
+        onOpenChange={handleModalClose}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              {modalState.type === 'add' ? 'Add New Role' : 'Edit Role'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="roleName" className="text-right">
+                Role Name
+              </Label>
+              <Input
+                id="roleName"
+                value={roleName}
+                onChange={(e) => setRoleName(e.target.value)}
+                className="col-span-3"
+                placeholder="Enter role name"
+              />
             </div>
-            <Button
-              variant="outline"
-              onClick={handleCreateRole}
-              disabled={isCreatingRole}
-              className="self-start md:self-auto"
-            >
-              {isCreatingRole ? (
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <PlusCircle className="mr-2 h-4 w-4" />
-              )}
-              Create Role
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleModalClose}>
+              Cancel
             </Button>
-          </div>
-        </CardHeader>
+            <Button
+              onClick={handleSaveRole}
+              disabled={isCreating || isUpdating || !roleName.trim()}
+            >
+              {isCreating || isUpdating ? 'Saving...' : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        <CardContent>
-          <div className="mb-6">
-            <RoleSelector
-              roles={roles}
-              selectedRole={selectedRole}
-              onRoleChange={handleRoleChange}
-              isLoading={isLoading}
-            />
-          </div>
-
-          {isLoading ? (
-            <div className="space-y-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-48 w-full" />
-              <Skeleton className="h-48 w-full" />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {Object.entries(permissionGroups).map(
-                ([category, permissions]) => (
-                  <PermissionCheckbox
-                    key={category}
-                    label={category}
-                    permissions={permissions}
-                    checkedPermissions={checkedPermissions[category] || {}}
-                    onChange={(id, checked) =>
-                      handlePermissionChange(category, id, checked)
-                    }
-                  />
-                ),
-              )}
-            </div>
-          )}
-        </CardContent>
-
-        <CardFooter className="flex justify-end border-t pt-6">
-          <Button
-            onClick={handleSubmit}
-            disabled={isUpdating || isLoading || !selectedRole}
-          >
-            {isUpdating ? (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              'Save Permissions'
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        open={modalState.type === 'delete' && modalState.open}
+        setOpen={handleModalClose}
+        handleConfirm={handleConfirmDelete}
+        content={{
+          title: 'Delete Role',
+          description:
+            'Are you sure you want to delete this role? This action cannot be undone.',
+        }}
+      />
     </div>
   );
-}
+};
+
+export default RolesList;

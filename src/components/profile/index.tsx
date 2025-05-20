@@ -1,39 +1,32 @@
 'use client';
 
-import { useUpdateProfileMutation } from '@/api/profileApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Form } from '@/components/ui/form';
+import { useResourceList, useUpdateResource } from '@/hooks/useAPIManagement';
 import { cn } from '@/lib/utils';
+import upload, { UploadResponse } from '@/utils/uploadFile';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CameraIcon, Pencil, Save, X } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { FormElement } from '../common/form/formElement';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
-// Updated schema based on provided specification
+// Schema
 const profileFormSchema = z.object({
-  alternate_email: z
+  email: z
     .string()
     .email('Invalid email address')
     .max(254, 'Email must be at most 254 characters')
+    .optional()
+    .or(z.literal('')),
+  password: z
+    .string()
+    .min(5, 'Password must be at least 5 characters')
+    .max(50, 'Password cannot exceed 50 characters')
     .optional()
     .or(z.literal('')),
   image: z
@@ -64,14 +57,13 @@ const profileFormSchema = z.object({
     .max(50, 'Phone number must be at most 50 characters')
     .optional()
     .or(z.literal('')),
-  gender: z
-    .enum(['Male', 'Female', 'Other'], {
-      errorMap: () => ({ message: 'Please select a valid gender' }),
-    })
-    .optional(),
+  gender: z.string().max(20, 'Gender must be at most 20 characters').optional(),
   date_of_birth: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)')
+    .union([z.string(), z.date()])
+    // .string()
+
+    // .date()
+    // .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)')
     .optional()
     .or(z.literal('')),
   nationality: z
@@ -83,26 +75,79 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-// Updated default values
-const defaultValues: Partial<ProfileFormValues> = {
-  alternate_email: 'Rodriguez@gmail.com',
-  image: '../images/avatar.png',
-  first_name: 'Michael',
-  middle_name: '',
-  last_name: 'Rodriguez',
-  fullname: 'Michael Rodriguez',
-  phone_number: '(213) 555-1234',
-  gender: undefined,
-  date_of_birth: '',
-  nationality: 'American',
-};
+interface IProfileResponse {
+  id: string;
+  email: string;
+  first_name: string;
+  middle_name: string;
+  last_name: string;
+  fullname: string;
+  phone_number: string;
+  gender: string;
+  date_of_birth: string;
+  nationality: string;
+  password: string;
+  image: string;
+}
 
 export function ProfileForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
   const [isEditing, setIsEditing] = useState(false);
-  const [updateProfile, { isLoading }] = useUpdateProfileMutation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    data: profile,
+    isLoading,
+    error,
+    filters,
+    setFilters,
+    pageIndex,
+    pageSize,
+  } = useResourceList<IProfileResponse>('/profiles/info/', {
+    defaultQuery: { pageIndex: 0, pageSize: 10, search: '' },
+  });
+
+  // Use updateResource for profile updates
+  const { mutate: updateProfile, isPending: isCreating } =
+    useUpdateResource<ProfileFormValues>('profiles', {
+      onSuccess: () => {
+        toast.success('Profile updated successfully');
+        setIsEditing(false);
+      },
+      onError: (error) => {
+        toast.error(error?.message || 'Failed to update profile');
+      },
+    });
+
+  // New hook for image upload
+  // const { mutate: uploadImage, isPending: isUploading } = useCreateResource<{
+  //   url: string;
+  // }>('upload/image', {
+  //   onSuccess: (data) => {
+  //     form.setValue('image', data.url, { shouldValidate: true });
+  //     toast.success('Image uploaded successfully');
+  //   },
+  //   onError: (error) => {
+  //     toast.error(error?.message || 'Failed to upload image');
+  //   },
+  // });
+
+  const defaultValues: Partial<ProfileFormValues> = {
+    email: profile?.email || '',
+    image: profile?.image || '',
+    first_name: profile?.first_name || '',
+    middle_name: profile?.middle_name || '',
+    last_name: profile?.last_name || '',
+    fullname: profile?.fullname || 'Michael Rodriguez',
+    phone_number: profile?.phone_number || '(213) 555-1234',
+    // gender: profile?.gender || 'Male',
+    password: profile?.password || '',
+    date_of_birth: profile?.date_of_birth || '',
+    nationality: profile?.nationality || '',
+  };
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues,
@@ -111,21 +156,73 @@ export function ProfileForm({
 
   async function onSubmit(data: ProfileFormValues) {
     try {
-      await updateProfile(data).unwrap();
-      toast.success('Profile updated successfully');
-      setIsEditing(false);
+      const validatedData = profileFormSchema.parse(data);
+      const { date_of_birth, ...rest } = validatedData;
+      const newData = {
+        ...rest,
+        date_of_birth: date_of_birth
+          ? new Date(date_of_birth).toISOString().split('T')[0]
+          : '',
+      };
+      await updateProfile(newData);
+      console.log('🚀 ~ onSubmit ~ newData:', newData);
     } catch (error) {
-      toast.error('Failed to update profile');
+      if (error instanceof z.ZodError) {
+        console.error('Validation errors:', error.errors);
+        toast.error('Please fix the validation errors in the form');
+      } else {
+        toast.error('Failed to update profile');
+      }
     }
   }
 
   const handleUploadProfileImage = () => {
-    // Simulate file upload (replace with actual file upload logic)
-    const newImageUrl = prompt('Enter image URL:'); // For demo; use proper file input in production
-    if (newImageUrl) {
-      form.setValue('image', newImageUrl, { shouldValidate: true });
+    // Trigger the hidden file input click
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    upload(file ? [file] : [], {
+      onChange(f, err) {
+        if (err) {
+          toast.error('Error uploading image');
+        } else {
+          toast.success('Image uploaded successfully');
+          form.setValue('image', (f as UploadResponse)?.file);
+        }
+      },
+    });
+  };
+
+  // accept={IMAGE_MIME_TYPE.join(',')}
+
+  // // Validate file type
+  // const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+  // if (!allowedTypes.includes(file.type)) {
+  //   toast.error('Only PNG, JPEG, or JPG files are allowed');
+  //   return;
+  // }
+
+  // // Validate file size (e.g., max 5MB)
+  // const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+  // if (file.size > maxSize) {
+  //   toast.error('File size must be less than 5MB');
+  //   return;
+  // }
+
+  // // Create FormData for file upload
+  // const formData = new FormData();
+  // formData.append('file', file);
+
+  // // Upload the file
+  // upload( formData as any); // Adjust based on your API requirements
+  // };
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
@@ -150,11 +247,20 @@ export function ProfileForm({
                           <AvatarFallback>CN</AvatarFallback>
                         </Avatar>
                         {isEditing && (
-                          <CameraIcon
-                            onClick={handleUploadProfileImage}
-                            size={16}
-                            className="absolute p-1 bg-gray-200 dark:bg-gray-100 w-6 h-6 rounded-2xl bottom-0 right-0 cursor-pointer"
-                          />
+                          <>
+                            <CameraIcon
+                              onClick={handleUploadProfileImage}
+                              size={16}
+                              className="absolute p-1 bg-gray-200 dark:bg-gray-100 w-6 h-6 rounded-2xl bottom-0 right-0 cursor-pointer"
+                            />
+                            <input
+                              type="file"
+                              ref={fileInputRef}
+                              onChange={handleFileChange}
+                              accept="image/png,image/jpeg,image/jpg"
+                              className="hidden"
+                            />
+                          </>
                         )}
                       </div>
                       {!isEditing && (
@@ -184,7 +290,7 @@ export function ProfileForm({
                       <Button
                         variant="outline"
                         onClick={() => {
-                          form.reset();
+                          form.reset(defaultValues);
                           setIsEditing(false);
                         }}
                         className="gap-2"
@@ -194,7 +300,7 @@ export function ProfileForm({
                       </Button>
                       <Button
                         type="submit"
-                        disabled={!form.formState.isValid || isLoading}
+                        disabled={!form.formState.isValid || isCreating}
                         className="gap-2"
                       >
                         <Save className="h-4 w-4" />
@@ -210,169 +316,46 @@ export function ProfileForm({
                       Personal Information
                     </h2>
                     <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2">
-                      <FormField
-                        control={form.control}
+                      <FormElement type="email" name="email" label="Email" />
+                      <FormElement
+                        type="password"
+                        name="password"
+                        label="Password"
+                      />
+                      <FormElement
+                        type="text"
                         name="first_name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>First Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                disabled={!isEditing}
-                                className="bg-background"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        label="First Name"
                       />
-                      <FormField
-                        control={form.control}
+                      <FormElement
+                        type="text"
                         name="middle_name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Middle Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                disabled={!isEditing}
-                                className="bg-background"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        label="Middle Name"
                       />
-                      <FormField
-                        control={form.control}
+                      <FormElement
+                        type="text"
                         name="last_name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Last Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                disabled={!isEditing}
-                                className="bg-background"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        label="Last Name"
                       />
-                      <FormField
-                        control={form.control}
+                      <FormElement
+                        type="text"
                         name="fullname"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Full Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                disabled={!isEditing}
-                                className="bg-background"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        label="Full Name"
                       />
-                      <FormField
-                        control={form.control}
-                        name="alternate_email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Alternate Email</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                disabled={!isEditing}
-                                className="bg-background"
-                                type="email"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
+                      <FormElement
+                        type="phone"
                         name="phone_number"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Phone Number</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                disabled={!isEditing}
-                                className="bg-background"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        label="Phone Number"
                       />
-                      <FormField
-                        control={form.control}
-                        name="gender"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Gender</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              disabled={!isEditing}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select gender" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="Male">Male</SelectItem>
-                                <SelectItem value="Female">Female</SelectItem>
-                                <SelectItem value="Other">Other</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
+                      <FormElement
+                        type="date"
                         name="date_of_birth"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Date of Birth</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                disabled={!isEditing}
-                                className="bg-background"
-                                type="date"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        label="Date of Birth"
                       />
-                      <FormField
-                        control={form.control}
+                      <FormElement
+                        type="text"
                         name="nationality"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nationality</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                disabled={!isEditing}
-                                className="bg-background"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        label="Nationality"
                       />
                     </div>
                   </div>

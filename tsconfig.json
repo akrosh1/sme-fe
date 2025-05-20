@@ -19,19 +19,9 @@
         "name": "next"
       }
     ],
-    // "paths": {
-    //   "@/*": ["src/*"],
-    //   "@/components/*": ["./src/components/*"]
-    //   // "@components/*": ["./src/components/*"],
-    //   // "@/lib/*": ["lib/*"],
-    //   // "@/utils/*": ["utils/*"]
-    // }
     "paths": {
       "@/*": ["src/*"],
       "@components/*": ["components/*"]
-      // "@/components/*": ["components/*"],
-      // "@/lib/*": ["lib/*"],
-      // "@/utils/*": ["utils/*"]
     }
   },
   "include": [

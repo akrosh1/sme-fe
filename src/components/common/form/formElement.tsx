@@ -4,8 +4,14 @@ import { CurrencyInput } from '@/components/common/form/currencyInput';
 import { PhoneInput } from '@/components/common/form/phoneInput';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+// import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -16,11 +22,13 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { Eye, EyeOff } from 'lucide-react';
-import type * as React from 'react';
+import { format } from 'date-fns';
+import { CalendarIcon, Eye, EyeOff } from 'lucide-react';
+import * as React from 'react';
 import { useState } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 
+// FormElementProps and FormElementsProps types remain unchanged
 export type FormElementProps = {
   text: React.InputHTMLAttributes<HTMLInputElement>;
   email: React.InputHTMLAttributes<HTMLInputElement>;
@@ -111,6 +119,7 @@ export function FormElement<T extends keyof FormElementProps>({
 
   const renderInput = () => {
     switch (type) {
+      // Other cases (text, email, tel, url, number, password, select, checkbox, switch, textarea, phone, currency) remain unchanged
       case 'text':
       case 'email':
       case 'tel':
@@ -327,32 +336,71 @@ export function FormElement<T extends keyof FormElementProps>({
               control={formContext.control}
               name={name}
               render={({ field }) => (
-                <Calendar
-                  id={name}
-                  mode="single"
-                  selected={field.value}
-                  onSelect={field.onChange}
-                  className={cn(
-                    'rounded-md border',
-                    error && 'border-destructive',
-                    className,
-                  )}
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id={name}
+                      variant="outline"
+                      className={cn(
+                        'w-[240px] justify-start text-left font-normal',
+                        !field.value && 'text-muted-foreground',
+                        error && 'border-destructive',
+                        className,
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {field.value ? (
+                        format(field.value, 'PPP')
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               )}
             />
           );
         } else {
           return (
-            <Calendar
-              id={name}
-              mode="single"
-              selected={localDate}
-              onSelect={(date) => {
-                setLocalDate(date);
-                dateOnChange?.(date);
-              }}
-              className={cn('rounded-md border', className)}
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id={name}
+                  variant="outline"
+                  className={cn(
+                    'w-[240px] justify-start text-left font-normal',
+                    !localDate && 'text-muted-foreground',
+                    className,
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {localDate ? (
+                    format(localDate, 'PPP')
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={localDate}
+                  onSelect={(date) => {
+                    setLocalDate(date);
+                    dateOnChange?.(date);
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           );
         }
       case 'phone':

@@ -38,16 +38,21 @@ export function ForgotPasswordForm({
     },
   });
 
-  const { mutate: forgotPassword, isPending: isLoggingIn } =
-    useCreateResource<forgotPasswordResponse>('/auth/token/', {
-      onSuccess: () => {
-        toast.success('Login successful');
-        router.push('/login');
+  const { mutate: forgotPassword, isPending: isLoading } =
+    useCreateResource<forgotPasswordResponse>(
+      '/users/request-reset-password/',
+      {
+        onSuccess: () => {
+          toast.success('Login successful');
+          router.push('/login');
+        },
+        onError: (error) => {
+          toast.error(
+            error?.message || 'Invalid credentials. Please try again.',
+          );
+        },
       },
-      onError: (error) => {
-        toast.error(error?.message || 'Invalid credentials. Please try again.');
-      },
-    });
+    );
 
   const onSubmit = async (data: ForgotPasswordFormInputs) => {
     forgotPassword(data);
@@ -70,9 +75,9 @@ export function ForgotPasswordForm({
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={form.formState.isSubmitting}
+                  disabled={form.formState.isSubmitting || isLoading}
                 >
-                  {form.formState.isSubmitting
+                  {form.formState.isSubmitting || isLoading
                     ? 'Sending...'
                     : 'Send Reset Link'}
                 </Button>
