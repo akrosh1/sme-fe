@@ -25,7 +25,7 @@ const PageHeader: FC<PageHeaderProps> = ({
   return (
     <div className={`flex mb-5 items-center justify-between ${className}`}>
       <div className="flex flex-col">
-        <h1 className="text-xl md:text-2xl font-bold">{title}</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-primary">{title}</h1>
         {subTitle && <p className="text-muted-foreground">{subTitle}</p>}
       </div>
 

@@ -201,41 +201,41 @@ export function HomeSection() {
             </p>
           </div>
           <FeaturesSection />
-          <div className="relative">
-            <div className="bg-background/20 backdrop-blur-sm p-4 rounded-xl w-[90%] mx-auto h-[70%] flex  pt-9 md:pt-15">
-              <DataTable
-                data={paginatedData}
-                columns={columns}
-                pagination={{
-                  state: pagination,
-                  onPaginationChange: setPagination,
-                  rowCount: filteredDataLength,
-                }}
-                sorting={{
-                  state: sorting,
-                  onSortingChange: setSorting,
-                }}
-                columnVisibility={{
-                  state: columnVisibility,
-                  onColumnVisibilityChange: setColumnVisibility,
-                }}
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                headerControls={
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      Filter by date
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <DownloadIcon className="mr-2 h-4 w-4" />
-                      Export
-                    </Button>
-                  </div>
-                }
-              />
-            </div>
+          {/* <div className="relative"> */}
+          <div className="bg-background/20 backdrop-blur-sm p-4 rounded-xl  mx-auto h-[70%] flex  pt-9 md:pt-15">
+            <DataTable
+              data={paginatedData}
+              columns={columns}
+              pagination={{
+                state: pagination,
+                onPaginationChange: setPagination,
+                rowCount: filteredDataLength,
+              }}
+              sorting={{
+                state: sorting,
+                onSortingChange: setSorting,
+              }}
+              columnVisibility={{
+                state: columnVisibility,
+                onColumnVisibilityChange: setColumnVisibility,
+              }}
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              headerControls={
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    Filter by date
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <DownloadIcon className="mr-2 h-4 w-4" />
+                    Export
+                  </Button>
+                </div>
+              }
+            />
           </div>
+          {/* </div> */}
         </section>
       </main>
       <Footer />

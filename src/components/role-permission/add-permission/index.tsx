@@ -2,333 +2,304 @@
 
 import PageHeader from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { RefreshCw } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import {
-  Permission,
-  PermissionCheckbox,
-} from './components/permissionCheckbox';
-import { Role, RoleSelector } from './components/roleSelector';
+  useCreateResource,
+  useResourceList,
+  useUpdateResource,
+} from '@/hooks/useAPIManagement';
+import { RefreshCw } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
+import { PermissionCheckbox } from './components/permissionCheckbox';
 
 // Type definitions
+interface IPermission {
+  id: number;
+  name: string;
+  codename: string;
+  content_type: string;
+}
+
+interface IPermissionGetResponse {
+  id: number;
+  name: string;
+  permissions: number[];
+}
+
 interface PermissionGroup {
-  [key: string]: Permission[];
+  [contentType: string]: {
+    id: string;
+    name: string;
+    description?: string;
+  }[];
 }
 
 interface PermissionState {
-  [key: string]: Record<string, number>;
+  [contentType: string]: Record<string, number>;
 }
 
-// Mock API functions (replace with your actual API calls)
-const fetchRoles = async (): Promise<Role[]> => {
-  // Simulate API call
-  return [
-    { id: '1', name: 'Administrator' },
-    { id: '2', name: 'Editor' },
-    { id: '3', name: 'Viewer' },
-  ];
-};
+interface IPermissionResponse {
+  name: string;
+  permissions: number[];
+}
 
-const fetchPermissions = async (roleId: string): Promise<PermissionGroup> => {
-  // Simulate API call
-  return {
-    'User Management': [
-      {
-        id: '1',
-        name: 'Create Users',
-        description: 'Ability to create new user accounts',
-      },
-      {
-        id: '2',
-        name: 'Edit Users',
-        description: 'Ability to modify existing user accounts',
-      },
-      {
-        id: '3',
-        name: 'Delete Users',
-        description: 'Ability to remove user accounts from the system',
-      },
-      {
-        id: '4',
-        name: 'View Users',
-        description: 'Ability to view user account details',
-      },
-    ],
-    'Content Management': [
-      {
-        id: '5',
-        name: 'Create Content',
-        description: 'Ability to create new content',
-      },
-      {
-        id: '6',
-        name: 'Edit Content',
-        description: 'Ability to modify existing content',
-      },
-      {
-        id: '7',
-        name: 'Delete Content',
-        description: 'Ability to remove content from the system',
-      },
-      {
-        id: '8',
-        name: 'Publish Content',
-        description: 'Ability to make content publicly visible',
-      },
-    ],
-    'System Settings': [
-      {
-        id: '9',
-        name: 'View Settings',
-        description: 'Ability to view system settings',
-      },
-      {
-        id: '10',
-        name: 'Modify Settings',
-        description: 'Ability to change system settings',
-      },
-      {
-        id: '11',
-        name: 'Manage Backups',
-        description: 'Ability to create and restore system backups',
-      },
-    ],
-  };
-};
-
-const fetchRolePermissions = async (
-  roleId: string,
-): Promise<Record<string, number>> => {
-  // Simulate API call
-  if (roleId === '1') {
-    // Administrator
-    return {
-      '1': 1,
-      '2': 1,
-      '3': 1,
-      '4': 1,
-      '5': 1,
-      '6': 1,
-      '7': 1,
-      '8': 1,
-      '9': 1,
-      '10': 1,
-      '11': 1,
-    };
-  } else if (roleId === '2') {
-    // Editor
-    return {
-      '1': 0,
-      '2': 0,
-      '3': 0,
-      '4': 1,
-      '5': 1,
-      '6': 1,
-      '7': 0,
-      '8': 1,
-      '9': 1,
-      '10': 0,
-      '11': 0,
-    };
-  } else {
-    // Viewer
-    return {
-      '1': 0,
-      '2': 0,
-      '3': 0,
-      '4': 1,
-      '5': 0,
-      '6': 0,
-      '7': 0,
-      '8': 0,
-      '9': 1,
-      '10': 0,
-      '11': 0,
-    };
-  }
-};
-
-const updateRolePermissions = async (
-  roleId: string,
-  permissions: PermissionState,
-): Promise<void> => {
-  // Simulate API call
-  console.log('Updating permissions for role', roleId, permissions);
-  // In a real app, you would send this data to your API
-  return new Promise((resolve) => setTimeout(resolve, 1000));
-};
+const formSchema = z.object({
+  name: z.string().max(60, 'Name must be at most 60 characters'),
+  permissions: z.array(z.number()).optional(),
+});
 
 export default function StaffPermissions() {
-  // State
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [selectedRole, setSelectedRole] = useState<string>('');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const roleId = searchParams.get('id');
   const [permissionGroups, setPermissionGroups] = useState<PermissionGroup>({});
   const [checkedPermissions, setCheckedPermissions] = useState<PermissionState>(
     {},
   );
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreatingRole, setIsCreatingRole] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
+  // const [isUpdating, setIsUpdating] = useState(false);
 
-  // Load roles on component mount
+  // Fetch permissions list
+  const { data: permissionsResponse, isLoading: isLoadingPermissions } =
+    useResourceList<{
+      count: number;
+      next: string | null;
+      previous: string | null;
+      results: IPermission[];
+    }>('/permissions/', {
+      defaultQuery: { pageIndex: 0, pageSize: 100, search: '' },
+    });
+
+  // Fetch role permissions
+  const { data: rolePermissions, isLoading: isLoadingRolePermissions } =
+    useResourceList<IPermissionGetResponse>(
+      roleId ? `/user-groups/${roleId}/` : '',
+      { defaultQuery: { pageIndex: 0, pageSize: 100, search: '' } },
+    );
+
+  // Form setup
+  const form = useForm<IPermissionResponse>({
+    // resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      permissions: [],
+    },
+    mode: 'onChange',
+  });
+
+  // Process permissions and initialize checked state
   useEffect(() => {
-    const loadRoles = async () => {
-      try {
-        const rolesData = await fetchRoles();
-        setRoles(rolesData);
-        if (rolesData.length > 0) {
-          setSelectedRole(rolesData[0].id);
-        }
-      } catch (error) {
-        console.error('Error loading roles:', error);
-        toast.error('Failed to load roles. Please try again.');
-      } finally {
-        setIsLoading(false);
+    if (!permissionsResponse?.results) return;
+
+    // Group permissions by content_type
+    const grouped = permissionsResponse.results.reduce((acc, permission) => {
+      const [appLabel, modelName] = permission.content_type.split(' | ');
+      const contentType = modelName || appLabel;
+
+      if (!acc[contentType]) {
+        acc[contentType] = [];
       }
-    };
 
-    loadRoles();
-  }, [toast]);
+      acc[contentType].push({
+        id: permission.id.toString(),
+        name: permission.name,
+        description: `Code: ${permission.codename}`,
+      });
 
-  // Load permissions when a role is selected
-  useEffect(() => {
-    if (!selectedRole) return;
+      return acc;
+    }, {} as PermissionGroup);
 
-    const loadPermissions = async () => {
-      setIsLoading(true);
-      try {
-        // Load permission structure
-        const permissionsData = await fetchPermissions(selectedRole);
-        setPermissionGroups(permissionsData);
+    setPermissionGroups(grouped);
 
-        // Load role's current permissions
-        const rolePermissions = await fetchRolePermissions(selectedRole);
+    // Initialize checked permissions state
+    const initialCheckedState: PermissionState = {};
+    const rolePerms = rolePermissions?.permissions || [];
 
-        // Initialize checked permissions state
-        const initialCheckedState: PermissionState = {};
+    Object.entries(grouped).forEach(([contentType, permissions]) => {
+      initialCheckedState[contentType] = {};
+      permissions.forEach((perm) => {
+        initialCheckedState[contentType][perm.id] = rolePerms.includes(
+          Number(perm.id),
+        )
+          ? 1
+          : 0;
+      });
+    });
 
-        Object.entries(permissionsData).forEach(([category, permissions]) => {
-          initialCheckedState[category] = {};
-          permissions.forEach((perm) => {
-            initialCheckedState[category][perm.id] =
-              rolePermissions[perm.id] || 0;
-          });
-        });
+    setCheckedPermissions(initialCheckedState);
 
-        setCheckedPermissions(initialCheckedState);
-      } catch (error) {
-        console.error('Error loading permissions:', error);
-        toast('Failed to load permissions. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // Initialize form values
+    if (rolePermissions) {
+      form.reset({
+        name: rolePermissions.name,
+        permissions: rolePermissions.permissions || [],
+      });
+    }
 
-    loadPermissions();
-  }, [selectedRole, toast]);
+    setIsLoading(false);
+  }, [permissionsResponse, rolePermissions, form]);
 
-  // Handle role selection
-  const handleRoleChange = (roleId: string) => {
-    setSelectedRole(roleId);
-  };
-
-  // Handle permission change
+  // Handle permission checkbox changes
   const handlePermissionChange = (
-    category: string,
+    contentType: string,
     id: string,
     checked: boolean,
   ) => {
     setCheckedPermissions((prev) => ({
       ...prev,
-      [category]: {
-        ...prev[category],
+      [contentType]: {
+        ...prev[contentType],
         [id]: checked ? 1 : 0,
       },
     }));
-  };
 
-  // Handle form submission
-  const handleSubmit = async () => {
-    if (selectedRole) {
-      setIsUpdating(true);
-      try {
-        await updateRolePermissions(selectedRole, checkedPermissions);
-        toast('Permissions have been updated successfully.');
-      } catch (error) {
-        console.error('Error updating permissions:', error);
-        toast('Failed to update permissions. Please try again.');
-      } finally {
-        setIsUpdating(false);
+    // Update form permissions
+    const currentPermissions = form.getValues('permissions') || [];
+    const permissionId = Number(id);
+
+    if (checked) {
+      if (!currentPermissions.includes(permissionId)) {
+        form.setValue('permissions', [...currentPermissions, permissionId], {
+          shouldDirty: true,
+        });
       }
+    } else {
+      form.setValue(
+        'permissions',
+        currentPermissions.filter((p) => p !== permissionId),
+        { shouldDirty: true },
+      );
     }
   };
 
-  // Handle create role
-  const handleCreateRole = () => {
-    setIsCreatingRole(true);
-    // In a real app, you would show a modal or navigate to a create role page
-    toast('This would open a modal to create a new role.');
-    setTimeout(() => setIsCreatingRole(false), 1000);
-  };
+  // Handle form submission
+  const { mutate: createRolePermissions, isPending: isCreating } =
+    useCreateResource<IPermissionGetResponse>(
+      roleId ? `/user-groups/${roleId}/` : '/user-groups/',
+      {
+        onSuccess: () => {
+          toast.success(
+            roleId
+              ? 'Permissions updated successfully'
+              : 'Role created successfully',
+          );
+          router.push('/roles');
+        },
+        onError: (error) => {
+          toast.error(error?.message || 'Failed to update permissions');
+          // setIsUpdating(false);
+        },
+      },
+    );
+
+  const { mutate: updateRolePermissions, isPending: isUpdating } =
+    useUpdateResource<IPermissionGetResponse>(
+      roleId ? `/user-groups/${roleId}/` : '/user-groups/',
+      {
+        onSuccess: () => {
+          toast.success(
+            roleId
+              ? 'Permissions updated successfully'
+              : 'Role created successfully',
+          );
+          router.push('/roles');
+        },
+        onError: (error) => {
+          toast.error(error?.message || 'Failed to update permissions');
+          // setIsUpdating(false);
+        },
+      },
+    );
+
+  const handleSubmit = form.handleSubmit((data) => {
+    // setIsUpdating(true);
+    const payload = {
+      name: data.name,
+      permissions: data.permissions || [],
+    };
+    if (roleId) {
+      updateRolePermissions(payload);
+    } else {
+      createRolePermissions(payload);
+    }
+  });
+
+  // Calculate loading state
+  const isProcessing =
+    isLoading ||
+    isLoadingPermissions ||
+    isLoadingRolePermissions ||
+    isUpdating ||
+    isCreating;
 
   return (
     <div className="container mx-auto py-6 max-w-6xl wrapper">
       <PageHeader
-        title="Role Permissions"
+        title={roleId ? 'Edit Role Permissions' : 'Create New Role'}
         subTitle="Manage permissions for different roles in your organization"
         actionText="Back"
         actionPath="/roles"
       />
-      <div>
+      <form onSubmit={handleSubmit}>
         <div className="mb-6">
-          <RoleSelector
-            roles={roles}
-            selectedRole={selectedRole}
-            onRoleChange={handleRoleChange}
-            isLoading={isLoading}
+          <Input
+            type="text"
+            placeholder="Role name"
+            {...form.register('name')}
+            className="w-full md:w-[300px]"
+            disabled={isProcessing}
           />
+          {form.formState.errors.name && (
+            <p className="text-destructive text-sm mt-1">
+              {form.formState.errors.name.message}
+            </p>
+          )}
         </div>
 
-        {isLoading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-48 w-full" />
-            <Skeleton className="h-48 w-full" />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {Object.entries(permissionGroups).map(([category, permissions]) => (
-              <PermissionCheckbox
-                key={category}
-                label={category}
-                permissions={permissions}
-                checkedPermissions={checkedPermissions[category] || {}}
-                onChange={(id, checked) =>
-                  handlePermissionChange(category, id, checked)
-                }
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="flex justify-end border-t pt-6">
-        <Button
-          onClick={handleSubmit}
-          disabled={isUpdating || isLoading || !selectedRole}
-        >
-          {isUpdating ? (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
+        <div className="space-y-3">
+          {isProcessing ? (
+            <div className="space-y-4">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-48 w-full" />
+              <Skeleton className="h-48 w-full" />
+            </div>
           ) : (
-            'Save Permissions'
+            Object.entries(permissionGroups).map(
+              ([contentType, permissions]) => (
+                <PermissionCheckbox
+                  key={contentType}
+                  label={contentType}
+                  permissions={permissions}
+                  checkedPermissions={checkedPermissions[contentType] || {}}
+                  onChange={(id, checked) =>
+                    handlePermissionChange(contentType, id, checked)
+                  }
+                />
+              ),
+            )
           )}
-        </Button>
-      </div>
+        </div>
+
+        <div className="flex justify-end border-t pt-6 mt-6">
+          <Button type="submit" disabled={isProcessing}>
+            {isProcessing ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                {roleId ? 'Saving...' : 'Creating...'}
+              </>
+            ) : roleId ? (
+              'Save Permissions'
+            ) : (
+              'Create Role'
+            )}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }

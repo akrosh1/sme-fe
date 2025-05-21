@@ -109,6 +109,9 @@ const RolesList = () => {
     },
     [router],
   );
+  const handleAdd = useCallback(() => {
+    router.push(`/roles/add-permission`);
+  }, [router]);
 
   const { mutate: deleteCMS, isPending: isDeleting } = useDeleteResource<Post>(
     `user-groups`,
@@ -246,7 +249,7 @@ const RolesList = () => {
     <div className="container wrapper">
       <div className="flex justify-between items-center mb-6">
         <PageHeader title="Roles List" />
-        <Button onClick={handleAddModalOpen}>Add Role</Button>
+        <Button onClick={handleAdd}>Add Role</Button>
       </div>
 
       <div className="flex justify-end mb-4">

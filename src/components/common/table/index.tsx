@@ -120,7 +120,7 @@ export function DataTable<TData>({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-accent overflow-hidden">
+      <div className="rounded-lg border border-accent overflow-hidden w-full">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

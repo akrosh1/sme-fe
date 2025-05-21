@@ -25,16 +25,9 @@ const cax = (access?: string | null, options?: Options): AxiosInstance => {
 
   instance.interceptors.request.use((config) => {
     const token = access ?? localStorage.getItem('token');
-    console.log('🚀 ~ cax ~ request interceptor ~ token:', token);
-
     if (token && token !== 'undefined' && token !== 'null') {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log(
-        '🚀 ~ cax ~ setting Authorization header:',
-        `Bearer ${token}`,
-      );
     } else {
-      console.warn('🚀 ~ cax ~ no valid token found');
       delete config.headers.Authorization;
     }
 

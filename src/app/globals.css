@@ -29,7 +29,7 @@
   --color-chart-1: #f3f3e0;
   --color-ring: #608bc1;
   --color-input: #cbdceb;
-  --color-border: #133e87;
+  --color-border: #cbdceb;
   --color-destructive: #eb6960;
   --color-accent-foreground: #133e87;
   --color-accent: #d9e8f8;
@@ -42,7 +42,7 @@
   --color-popover-foreground: #133e87;
   --color-popover: #f2f9ff;
   --color-card-foreground: #133e87;
-  --color-card: #f2f9ff;
+  --color-card: #fff;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
