@@ -30,7 +30,7 @@
   --color-ring: #608bc1;
   --color-input: #cbdceb;
   --color-border: #133e87;
-  --color-destructive: #133e87;
+  --color-destructive: #eb6960;
   --color-accent-foreground: #133e87;
   --color-accent: #d9e8f8;
   --color-muted-foreground: #666;
@@ -68,7 +68,7 @@
   --muted-foreground: #133e87;
   --accent: #608bc1;
   --accent-foreground: #f3f3e0;
-  --destructive: #133e87;
+  --destructive: #eb6960;
   --border: #f3f3e0;
   --input: #cbdceb;
   --ring: #608bc1;

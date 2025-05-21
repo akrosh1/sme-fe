@@ -1,17 +1,18 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
+import { CameraIcon, Pencil, Save, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import * as z from 'zod';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { useResourceList, useUpdateResource } from '@/hooks/useAPIManagement';
 import { cn } from '@/lib/utils';
 import upload, { UploadResponse } from '@/utils/uploadFile';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { CameraIcon, Pencil, Save, X } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import * as z from 'zod';
 import { FormElement } from '../common/form/formElement';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
@@ -58,14 +59,7 @@ const profileFormSchema = z.object({
     .optional()
     .or(z.literal('')),
   gender: z.string().max(20, 'Gender must be at most 20 characters').optional(),
-  date_of_birth: z
-    .union([z.string(), z.date()])
-    // .string()
-
-    // .date()
-    // .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)')
-    .optional()
-    .or(z.literal('')),
+  date_of_birth: z.union([z.string(), z.date()]),
   nationality: z
     .string()
     .max(50, 'Nationality must be at most 50 characters')
@@ -97,21 +91,15 @@ export function ProfileForm({
   const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const {
-    data: profile,
-    isLoading,
-    error,
-    filters,
-    setFilters,
-    pageIndex,
-    pageSize,
-  } = useResourceList<IProfileResponse>('/profiles/info/', {
-    defaultQuery: { pageIndex: 0, pageSize: 10, search: '' },
-  });
+  const { data: profile, isLoading } = useResourceList<IProfileResponse>(
+    '/profiles/info/',
+    {
+      defaultQuery: { pageIndex: 0, pageSize: 10, search: '' },
+    },
+  );
 
-  // Use updateResource for profile updates
   const { mutate: updateProfile, isPending: isCreating } =
-    useUpdateResource<ProfileFormValues>('profiles', {
+    useUpdateResource<ProfileFormValues>(`profiles/${profile?.id}/`, {
       onSuccess: () => {
         toast.success('Profile updated successfully');
         setIsEditing(false);
@@ -121,32 +109,21 @@ export function ProfileForm({
       },
     });
 
-  // New hook for image upload
-  // const { mutate: uploadImage, isPending: isUploading } = useCreateResource<{
-  //   url: string;
-  // }>('upload/image', {
-  //   onSuccess: (data) => {
-  //     form.setValue('image', data.url, { shouldValidate: true });
-  //     toast.success('Image uploaded successfully');
-  //   },
-  //   onError: (error) => {
-  //     toast.error(error?.message || 'Failed to upload image');
-  //   },
-  // });
-
-  const defaultValues: Partial<ProfileFormValues> = {
-    email: profile?.email || '',
-    image: profile?.image || '',
-    first_name: profile?.first_name || '',
-    middle_name: profile?.middle_name || '',
-    last_name: profile?.last_name || '',
-    fullname: profile?.fullname || 'Michael Rodriguez',
-    phone_number: profile?.phone_number || '(213) 555-1234',
-    // gender: profile?.gender || 'Male',
-    password: profile?.password || '',
-    date_of_birth: profile?.date_of_birth || '',
-    nationality: profile?.nationality || '',
-  };
+  const defaultValues = useMemo<Partial<ProfileFormValues>>(
+    () => ({
+      email: profile?.email || '',
+      image: profile?.image || '',
+      first_name: profile?.first_name || '',
+      middle_name: profile?.middle_name || '',
+      last_name: profile?.last_name || '',
+      fullname: profile?.fullname || '',
+      phone_number: profile?.phone_number || '',
+      password: profile?.password || '',
+      date_of_birth: profile?.date_of_birth || '',
+      nationality: profile?.nationality || '',
+    }),
+    [profile],
+  );
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -154,75 +131,73 @@ export function ProfileForm({
     mode: 'onChange',
   });
 
-  async function onSubmit(data: ProfileFormValues) {
-    try {
-      const validatedData = profileFormSchema.parse(data);
-      const { date_of_birth, ...rest } = validatedData;
-      const newData = {
-        ...rest,
-        date_of_birth: date_of_birth
-          ? new Date(date_of_birth).toISOString().split('T')[0]
-          : '',
-      };
-      await updateProfile(newData);
-      console.log('🚀 ~ onSubmit ~ newData:', newData);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        console.error('Validation errors:', error.errors);
-        toast.error('Please fix the validation errors in the form');
-      } else {
-        toast.error('Failed to update profile');
-      }
+  useEffect(() => {
+    if (profile) {
+      form.reset(defaultValues);
     }
+  }, [profile, form, defaultValues]);
+
+  const onSubmit = useCallback(
+    async (data: ProfileFormValues) => {
+      try {
+        const validatedData = profileFormSchema.parse(data);
+        const { date_of_birth, ...rest } = validatedData;
+        const newData = {
+          ...rest,
+          date_of_birth: date_of_birth
+            ? new Date(date_of_birth).toISOString().split('T')[0]
+            : '',
+        };
+        await updateProfile(newData);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          console.error('Validation errors:', error.errors);
+          toast.error('Please fix the validation errors in the form');
+        } else {
+          toast.error('Failed to update profile');
+        }
+      }
+    },
+    [updateProfile],
+  );
+
+  const handleUploadProfileImage = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      upload([file], {
+        onChange(f, err) {
+          if (err) {
+            toast.error('Error uploading image');
+          } else {
+            toast.success('Image uploaded successfully');
+            form.setValue('image', (f as UploadResponse)?.file);
+          }
+        },
+      });
+    },
+    [form],
+  );
+
+  const handleCancel = useCallback(() => {
+    form.reset(defaultValues);
+    setIsEditing(false);
+  }, [form, defaultValues]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
 
-  const handleUploadProfileImage = () => {
-    // Trigger the hidden file input click
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    upload(file ? [file] : [], {
-      onChange(f, err) {
-        if (err) {
-          toast.error('Error uploading image');
-        } else {
-          toast.success('Image uploaded successfully');
-          form.setValue('image', (f as UploadResponse)?.file);
-        }
-      },
-    });
-  };
-
-  // accept={IMAGE_MIME_TYPE.join(',')}
-
-  // // Validate file type
-  // const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
-  // if (!allowedTypes.includes(file.type)) {
-  //   toast.error('Only PNG, JPEG, or JPG files are allowed');
-  //   return;
-  // }
-
-  // // Validate file size (e.g., max 5MB)
-  // const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-  // if (file.size > maxSize) {
-  //   toast.error('File size must be less than 5MB');
-  //   return;
-  // }
-
-  // // Create FormData for file upload
-  // const formData = new FormData();
-  // formData.append('file', file);
-
-  // // Upload the file
-  // upload( formData as any); // Adjust based on your API requirements
-  // };
+  const fullName =
+    form.watch('fullname') ||
+    `${form.watch('first_name')} ${form.watch('last_name')}`;
+  const email = form.watch('email');
+  const imageSrc = form.watch('image') || 'https://github.com/shadcn.png';
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
@@ -237,14 +212,10 @@ export function ProfileForm({
                     <div className="flex items-center gap-4">
                       <div className="relative border rounded-full">
                         <Avatar className="w-20 h-20">
-                          <AvatarImage
-                            src={
-                              form.watch('image') ||
-                              'https://github.com/shadcn.png'
-                            }
-                            alt="Profile"
-                          />
-                          <AvatarFallback>CN</AvatarFallback>
+                          <AvatarImage src={imageSrc} alt="Profile" />
+                          <AvatarFallback>
+                            {fullName?.slice(0, 2)}
+                          </AvatarFallback>
                         </Avatar>
                         {isEditing && (
                           <>
@@ -266,12 +237,11 @@ export function ProfileForm({
                       {!isEditing && (
                         <div>
                           <p className="font-medium text-xl text-gray-900">
-                            {form.watch('fullname') ||
-                              `${form.watch('first_name')} ${form.watch('last_name')}`}
+                            {fullName}
                           </p>
-                          <p className="text-muted-foreground">
-                            {form.watch('nationality') || 'Not specified'}
-                          </p>
+                          {email && (
+                            <p className="text-muted-foreground">{email}</p>
+                          )}
                         </div>
                       )}
                     </div>
@@ -289,10 +259,7 @@ export function ProfileForm({
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
-                        onClick={() => {
-                          form.reset(defaultValues);
-                          setIsEditing(false);
-                        }}
+                        onClick={handleCancel}
                         className="gap-2"
                       >
                         <X className="h-4 w-4" />
@@ -316,46 +283,62 @@ export function ProfileForm({
                       Personal Information
                     </h2>
                     <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2">
-                      <FormElement type="email" name="email" label="Email" />
+                      <FormElement
+                        type="email"
+                        name="email"
+                        label="Email"
+                        disabled={!isEditing}
+                      />
                       <FormElement
                         type="password"
                         name="password"
                         label="Password"
+                        disabled={!isEditing}
+                        autoComplete={isEditing ? 'new-password' : 'off'}
+                        showEyeIcon={isEditing}
                       />
                       <FormElement
                         type="text"
                         name="first_name"
                         label="First Name"
+                        disabled={!isEditing}
                       />
                       <FormElement
                         type="text"
                         name="middle_name"
                         label="Middle Name"
+                        disabled={!isEditing}
                       />
                       <FormElement
                         type="text"
                         name="last_name"
                         label="Last Name"
+                        disabled={!isEditing}
                       />
                       <FormElement
                         type="text"
                         name="fullname"
                         label="Full Name"
+                        disabled={!isEditing}
                       />
                       <FormElement
                         type="phone"
                         name="phone_number"
                         label="Phone Number"
+                        disabled={!isEditing}
                       />
                       <FormElement
                         type="date"
                         name="date_of_birth"
                         label="Date of Birth"
+                        className="w-full"
+                        disabled={!isEditing}
                       />
                       <FormElement
                         type="text"
                         name="nationality"
                         label="Nationality"
+                        disabled={!isEditing}
                       />
                     </div>
                   </div>
