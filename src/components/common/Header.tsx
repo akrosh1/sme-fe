@@ -9,9 +9,10 @@ import {
 import { useAppDispatch } from '@/hooks/useDispatch';
 import { useIsMobile } from '@/hooks/useMobile';
 import { logout } from '@/store/slices/authSlice';
-import { Bell, LogOutIcon, Settings, User } from 'lucide-react';
+import { LogOutIcon, Settings, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Notifications } from './notification';
 
 export function Header() {
   const dispatch = useAppDispatch();
@@ -30,10 +31,7 @@ export function Header() {
       <div className="container flex h-15 items-center p-4">
         <div className="flex flex-1 items-center  space-x-2 justify-end">
           <nav className="flex items-center">
-            <Button variant="ghost" size="default">
-              <Bell className="h-5 w-5" />
-              <span className="sr-only">Notifications</span>
-            </Button>
+            <Notifications />
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="default">

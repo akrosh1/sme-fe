@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Select,
   SelectContent,
@@ -10,7 +12,6 @@ import React, { useMemo, useState } from 'react';
 import { Button } from '../../ui/button';
 import { Calendar } from '../../ui/calendar';
 
-// Enum for predefined date ranges to improve type safety
 enum DateRangeOption {
   Today = 'today',
   Yesterday = 'yesterday',
@@ -20,7 +21,6 @@ enum DateRangeOption {
   LastThreeMonths = 'lastthreemonth',
   Custom = 'customs',
 }
-// Interface for date option
 interface DateOption {
   value: DateRangeOption;
   label: string;
@@ -37,7 +37,6 @@ export interface IDateFilter {
   toDate?: string;
 }
 
-// Interface for component props with improved typing
 interface CustomDateSelectorProps {
   options?: DateOption[];
   date: IDateFilter;
@@ -114,7 +113,6 @@ const CustomDateSelector: React.FC<CustomDateSelectorProps> = ({
     );
   }, [date, currentValue, options]);
 
-  // Custom Select Item with improved typing and functionality
   const CustomSelectItem = React.forwardRef<
     HTMLDivElement,
     { option: DateOption }
@@ -128,8 +126,7 @@ const CustomDateSelector: React.FC<CustomDateSelectorProps> = ({
               e.preventDefault();
               setShowDatePicker(true);
             }}
-            // value={option.value}
-            className="text-grey-900 hover:bg-grey-50 border-t px-md py-sm text-grey-dark:bg-grey-800 dark:hover:bg-grey-700 dark:text-grey-50 cursor-pointer transition-all ease-in-out"
+            className="text-grey-900  hover:bg-grey-50 border-t pl-2  border-accent cursor-pointer hover:bg-accent py-1 rounded-md"
           >
             {option.label}
           </div>
@@ -141,7 +138,7 @@ const CustomDateSelector: React.FC<CustomDateSelectorProps> = ({
       <SelectItem
         value={option.value}
         ref={ref}
-        className="text-grey-900 dark:bg-grey-800 dark:hover:bg-grey-700 dark:text-grey-50 cursor-pointer transition-all ease-in-out"
+        className="text-grey-900 text-sm dark:bg-grey-800 dark:hover:bg-grey-700 dark:text-grey-50 cursor-pointer transition-all ease-in-out"
       >
         {option.label}
       </SelectItem>
@@ -157,18 +154,13 @@ const CustomDateSelector: React.FC<CustomDateSelectorProps> = ({
           className="w-max"
           onClick={() => setShowOptions(!showOptions)}
         >
-          <Calendar />
           <SelectValue className="">
             <span className="text-black dark:text-grey-100 font-body16">
               {displayValue}
             </span>
           </SelectValue>
         </SelectTrigger>
-        <SelectContent
-          className={`min-w-[170px] absolute top-0 ${
-            showDatePicker ? '-left-12' : ''
-          } bg-white dark:bg-grey-800 rounded-md shadow-lg z-50`}
-        >
+        <SelectContent>
           {showDatePicker ? (
             <div className="bg-white dark:bg-grey-900 text-black py-2">
               <div className="flex justify-center items-center gap-1">
@@ -176,11 +168,11 @@ const CustomDateSelector: React.FC<CustomDateSelectorProps> = ({
                   date?.to ? (
                     <>
                       <>
-                        <span className="border p-2 rounded-lg">
+                        <span className="border border-accent p-1 px-2 text-sm rounded-lg">
                           {format(date?.from || '', 'LLL dd, y')}
                         </span>
                         -{' '}
-                        <span className="border p-2 rounded-lg">
+                        <span className="border border-accent p-1 px-2 text-sm rounded-lg">
                           {format(date?.to || '', 'LLL dd, y')}
                         </span>
                       </>

@@ -9,10 +9,7 @@ import { toast } from 'sonner';
 import useFetch, { FetchOptions } from './useFetch';
 import useFilter, { IUseFilterOptions } from './useFilter';
 
-// Base API URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
-// Interface for paginated API responses
 interface PaginatedResponse<T> {
   data: T;
   total: number;
@@ -20,7 +17,6 @@ interface PaginatedResponse<T> {
   pageSize: number;
 }
 
-// Generic hook for fetching a list of resources
 export const useResourceList = <T>(
   resource: string,
   filterOptions: IUseFilterOptions<{
