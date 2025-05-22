@@ -10,7 +10,7 @@
 }
 
 @theme inline {
-  --color-background: #f2f9ff;
+  --color-background: #f3f4f6;
   --color-foreground: #444444;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

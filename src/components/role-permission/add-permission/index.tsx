@@ -9,6 +9,10 @@ import {
   useResourceList,
   useUpdateResource,
 } from '@/hooks/useAPIManagement';
+import useFetch from '@/hooks/useFetch';
+import toastError from '@/lib/toastError';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { QueryClient } from '@tanstack/react-query';
 import { RefreshCw } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -29,6 +33,7 @@ interface IPermissionGetResponse {
   id: number;
   name: string;
   permissions: number[];
+  permissions_list: number[];
 }
 
 interface PermissionGroup {
@@ -49,22 +54,26 @@ interface IPermissionResponse {
 }
 
 const formSchema = z.object({
-  name: z.string().max(60, 'Name must be at most 60 characters'),
-  permissions: z.array(z.number()).optional(),
+  name: z
+    .string()
+    .max(60, 'Name must be at most 60 characters')
+    .min(1, 'Name is required'),
+  permissions: z.array(z.number()).default([]),
 });
 
+type FormData = z.infer<typeof formSchema>;
+
 export default function StaffPermissions() {
-  const searchParams = useSearchParams();
   const router = useRouter();
+  const queryClient = new QueryClient();
+  const searchParams = useSearchParams();
   const roleId = searchParams.get('id');
   const [permissionGroups, setPermissionGroups] = useState<PermissionGroup>({});
   const [checkedPermissions, setCheckedPermissions] = useState<PermissionState>(
     {},
   );
   const [isLoading, setIsLoading] = useState(true);
-  // const [isUpdating, setIsUpdating] = useState(false);
 
-  // Fetch permissions list
   const { data: permissionsResponse, isLoading: isLoadingPermissions } =
     useResourceList<{
       count: number;
@@ -72,19 +81,32 @@ export default function StaffPermissions() {
       previous: string | null;
       results: IPermission[];
     }>('/permissions/', {
-      defaultQuery: { pageIndex: 0, pageSize: 100, search: '' },
+      defaultQuery: { pageIndex: 0, pageSize: 100 },
+      // @ts-expect-error fix later
+      onError: (error: AxiosError) => {
+        console.error('Failed to fetch permissions:', error?.message);
+      },
     });
 
-  // Fetch role permissions
   const { data: rolePermissions, isLoading: isLoadingRolePermissions } =
-    useResourceList<IPermissionGetResponse>(
-      roleId ? `/user-groups/${roleId}/` : '',
-      { defaultQuery: { pageIndex: 0, pageSize: 100, search: '' } },
+    useFetch<'get', { id: string }, IPermissionGetResponse>(
+      `/user-groups/${roleId}`,
+      'get',
+      {
+        enabled: !!roleId,
+        // @ts-expect-error fix later
+        onError: (error: AxiosError) => {
+          console.error(
+            `Failed to fetch user with ID ${roleId}:`,
+            error?.message,
+          );
+        },
+        select: (data: { data: IPermissionGetResponse }) => data.data,
+      },
     );
 
-  // Form setup
-  const form = useForm<IPermissionResponse>({
-    // resolver: zodResolver(formSchema),
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema as any),
     defaultValues: {
       name: '',
       permissions: [],
@@ -92,11 +114,8 @@ export default function StaffPermissions() {
     mode: 'onChange',
   });
 
-  // Process permissions and initialize checked state
   useEffect(() => {
     if (!permissionsResponse?.results) return;
-
-    // Group permissions by content_type
     const grouped = permissionsResponse.results.reduce((acc, permission) => {
       const [appLabel, modelName] = permission.content_type.split(' | ');
       const contentType = modelName || appLabel;
@@ -116,7 +135,6 @@ export default function StaffPermissions() {
 
     setPermissionGroups(grouped);
 
-    // Initialize checked permissions state
     const initialCheckedState: PermissionState = {};
     const rolePerms = rolePermissions?.permissions || [];
 
@@ -133,7 +151,6 @@ export default function StaffPermissions() {
 
     setCheckedPermissions(initialCheckedState);
 
-    // Initialize form values
     if (rolePermissions) {
       form.reset({
         name: rolePermissions.name,
@@ -144,7 +161,6 @@ export default function StaffPermissions() {
     setIsLoading(false);
   }, [permissionsResponse, rolePermissions, form]);
 
-  // Handle permission checkbox changes
   const handlePermissionChange = (
     contentType: string,
     id: string,
@@ -158,7 +174,6 @@ export default function StaffPermissions() {
       },
     }));
 
-    // Update form permissions
     const currentPermissions = form.getValues('permissions') || [];
     const permissionId = Number(id);
 
@@ -179,55 +194,42 @@ export default function StaffPermissions() {
 
   // Handle form submission
   const { mutate: createRolePermissions, isPending: isCreating } =
-    useCreateResource<IPermissionGetResponse>(
-      roleId ? `/user-groups/${roleId}/` : '/user-groups/',
-      {
-        onSuccess: () => {
-          toast.success(
-            roleId
-              ? 'Permissions updated successfully'
-              : 'Role created successfully',
-          );
-          router.push('/roles');
-        },
-        onError: (error) => {
-          toast.error(error?.message || 'Failed to update permissions');
-          // setIsUpdating(false);
-        },
+    useCreateResource<IPermissionGetResponse>('/user-groups/', {
+      onSuccess: () => {
+        toast.success('Role created successfully');
+        router.push('/roles');
+        queryClient.invalidateQueries({ queryKey: ['user-groups'] });
       },
-    );
+      onError: (error) => {
+        toastError(error.error);
+      },
+    });
 
   const { mutate: updateRolePermissions, isPending: isUpdating } =
-    useUpdateResource<IPermissionGetResponse>(
-      roleId ? `/user-groups/${roleId}/` : '/user-groups/',
-      {
-        onSuccess: () => {
-          toast.success(
-            roleId
-              ? 'Permissions updated successfully'
-              : 'Role created successfully',
-          );
-          router.push('/roles');
-        },
-        onError: (error) => {
-          toast.error(error?.message || 'Failed to update permissions');
-          // setIsUpdating(false);
-        },
+    useUpdateResource<IPermissionGetResponse>(`/user-groups/${roleId}/`, {
+      onSuccess: () => {
+        toast.success('Permissions updated successfully');
+        router.push('/roles');
       },
-    );
+      onError: (error) => {
+        toast.error(error?.message || 'Failed to update permissions');
+      },
+    });
 
-  const handleSubmit = form.handleSubmit((data) => {
-    // setIsUpdating(true);
+  const onSubmit = (data: FormData) => {
+    const permissionsPayload = Array.isArray(data.permissions)
+      ? data.permissions
+      : [];
     const payload = {
       name: data.name,
-      permissions: data.permissions || [],
+      permissions: permissionsPayload || [],
     };
     if (roleId) {
       updateRolePermissions(payload);
     } else {
       createRolePermissions(payload);
     }
-  });
+  };
 
   // Calculate loading state
   const isProcessing =
@@ -245,11 +247,11 @@ export default function StaffPermissions() {
         actionText="Back"
         actionPath="/roles"
       />
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="mb-6">
+          <label htmlFor="name">Role Name</label>
           <Input
             type="text"
-            placeholder="Role name"
             {...form.register('name')}
             className="w-full md:w-[300px]"
             disabled={isProcessing}

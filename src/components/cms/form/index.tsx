@@ -2,6 +2,7 @@
 
 import { FormElement } from '@/components/common/form/formElement';
 import PageHeader from '@/components/common/PageHeader';
+import { TiptapEditor } from '@/components/common/richTextEditor/tiptapEditor';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { useCreateResource, useUpdateResource } from '@/hooks/useAPIManagement';
@@ -118,6 +119,13 @@ export function CMSForm() {
       >
         <FormElement label="Title" type="text" name="title" />
         <FormElement label="Content" type="textarea" name="content" />
+
+        <TiptapEditor
+          content={initialValues.content}
+          onChange={(content) => form.setValue('content', content)}
+          placeholder="Start typing..."
+        />
+
         <FormElement
           label="Status"
           options={statusOptions}

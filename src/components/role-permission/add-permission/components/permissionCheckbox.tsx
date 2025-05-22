@@ -77,7 +77,7 @@ export function PermissionCheckbox({
                       : 'unchecked'
                 }
                 onCheckedChange={handleParentChange}
-                className="h-5 w-5 rounded-sm border-gray-300 data-[state=indeterminate]:bg-blue-400"
+                className="h-5 w-5 rounded-sm border-gray-300 data-[state=indeterminate]:bg-blue-200"
                 onClick={(e) => e.stopPropagation()}
               />
               <label
@@ -114,20 +114,6 @@ export function PermissionCheckbox({
                     >
                       {perm.name}
                     </label>
-                    {/* {perm.description && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="h-3 w-3 text-gray-400" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="text-xs max-w-xs">
-                              {perm.description}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )} */}
                   </div>
                 </div>
               </div>

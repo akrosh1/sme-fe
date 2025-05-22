@@ -18,11 +18,13 @@ interface PaginatedResponse<T> {
 }
 
 export const useResourceList = <T>(
-  resource: string,
+  resource: string | null,
+
   filterOptions: IUseFilterOptions<{
     pageIndex?: number;
     pageSize?: number;
     sort?: string;
+    enabled?: boolean;
     [key: string]: any;
   }> = { defaultQuery: {} },
 ) => {
@@ -49,7 +51,7 @@ export const useResourceList = <T>(
     `${API_BASE_URL}/${resource}`,
     'get',
     {
-      enabled: true,
+      enabled: !!resource && true,
       // ts-expect-error will be fixed later
       onError: (error: IResponse<PaginatedResponse<T>>) => {
         toast.error(
@@ -88,7 +90,6 @@ export const useDeleteResource = <T>(
       ...options,
       onSuccess: (data, variables, context) => {
         console.log(`${resource} deleted successfully`);
-        // Invalidate resource list queries
         queryClient.invalidateQueries({ queryKey: [resource] });
         options?.onSuccess?.(data, variables, context);
       },
@@ -114,7 +115,6 @@ export const useUpdateResource = <T>(
       ...options,
       onSuccess: (data, variables, context) => {
         console.log(`${resource} updated successfully`);
-        // Invalidate resource list and single resource queries
         queryClient.invalidateQueries({ queryKey: [resource] });
         queryClient.invalidateQueries({ queryKey: [resource, variables.id] });
         options?.onSuccess?.(data, variables, context);
@@ -141,7 +141,6 @@ export const useCreateResource = <T>(
       ...options,
       onSuccess: (data, variables, context) => {
         console.log(`${resource} created successfully`);
-        // Invalidate resource list queries
         queryClient.invalidateQueries({ queryKey: [resource] });
         options?.onSuccess?.(data, variables, context);
       },

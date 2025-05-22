@@ -1,8 +1,5 @@
 'use client';
-import { Button } from '@/components/ui/button';
 import type { ColumnDef } from '@tanstack/react-table';
-import { CalendarIcon, DownloadIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
 import Footer from '../common/Footer';
 import { DataTable } from '../common/table';
 import { Badge } from '../ui/badge';
@@ -19,7 +16,7 @@ interface Payment {
 }
 
 // Example data
-const data: Payment[] = Array.from({ length: 50 }).map((_, i) => ({
+const data: Payment[] = Array.from({ length: 10 }).map((_, i) => ({
   id: `INV-${1000 + i}`,
   amount: Math.floor(Math.random() * 1000) + 100,
   status: ['pending', 'processing', 'success', 'failed'][
@@ -31,27 +28,6 @@ const data: Payment[] = Array.from({ length: 50 }).map((_, i) => ({
   ).toISOString(),
 }));
 export function HomeSection() {
-  // Pagination state
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
-
-  // Sorting state
-  const [sorting, setSorting] = useState([
-    {
-      id: 'createdAt',
-      desc: true,
-    },
-  ]);
-
-  // Column visibility state
-  const [columnVisibility, setColumnVisibility] = useState({});
-
-  // Filters state
-  const [filters, setFilters] = useState<Record<string, any>>({});
-
-  // Define columns
   const columns: ColumnDef<Payment>[] = [
     {
       accessorKey: 'id',
@@ -106,7 +82,7 @@ export function HomeSection() {
           currency: 'USD',
         }).format(amount);
 
-        return <div className="text-right font-medium">{formatted}</div>;
+        return <div className="text-left font-medium">{formatted}</div>;
       },
     },
     {
@@ -117,71 +93,6 @@ export function HomeSection() {
       },
     },
   ];
-
-  // Handle filter changes
-  const handleFilterChange = (newFilters: Record<string, any>) => {
-    const hasChanged =
-      Object.keys(newFilters).some((key) => filters[key] !== newFilters[key]) ||
-      Object.keys(filters).some((key) => !newFilters.hasOwnProperty(key));
-
-    if (hasChanged) {
-      setFilters(newFilters);
-      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-    }
-  };
-
-  const { paginatedData, filteredDataLength } = useMemo(() => {
-    const filteredData = data.filter((item) => {
-      for (const [key, value] of Object.entries(filters)) {
-        if (!value) continue;
-
-        if (key === 'global') {
-          const searchTerm = String(value).toLowerCase();
-          if (
-            !Object.values(item).some((val) =>
-              String(val).toLowerCase().includes(searchTerm),
-            )
-          ) {
-            return false;
-          }
-        } else if (key === 'status' && value) {
-          if (!item.status.includes(String(value).toLowerCase())) {
-            return false;
-          }
-        } else if (key === 'email' && value) {
-          if (!item.email.toLowerCase().includes(String(value).toLowerCase())) {
-            return false;
-          }
-        } else if (key === 'amount' && value) {
-          if (item.amount < Number(value)) {
-            return false;
-          }
-        }
-      }
-      return true;
-    });
-
-    const sortedData = [...filteredData].sort((a, b) => {
-      for (const sort of sorting) {
-        const key = sort.id as keyof Payment;
-        if (sort.desc) {
-          if (a[key] < b[key]) return 1;
-          if (a[key] > b[key]) return -1;
-        } else {
-          if (a[key] < b[key]) return -1;
-          if (a[key] > b[key]) return 1;
-        }
-      }
-      return 0;
-    });
-
-    const paginatedData = sortedData.slice(
-      pagination.pageIndex * pagination.pageSize,
-      (pagination.pageIndex + 1) * pagination.pageSize,
-    );
-
-    return { paginatedData, filteredDataLength: filteredData.length };
-  }, [data, filters, sorting, pagination.pageIndex, pagination.pageSize]);
 
   return (
     <>
@@ -201,41 +112,9 @@ export function HomeSection() {
             </p>
           </div>
           <FeaturesSection />
-          {/* <div className="relative"> */}
-          <div className="bg-background/20 backdrop-blur-sm p-4 rounded-xl  mx-auto h-[70%] flex  pt-9 md:pt-15">
-            <DataTable
-              data={paginatedData}
-              columns={columns}
-              pagination={{
-                state: pagination,
-                onPaginationChange: setPagination,
-                rowCount: filteredDataLength,
-              }}
-              sorting={{
-                state: sorting,
-                onSortingChange: setSorting,
-              }}
-              columnVisibility={{
-                state: columnVisibility,
-                onColumnVisibilityChange: setColumnVisibility,
-              }}
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              headerControls={
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    Filter by date
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <DownloadIcon className="mr-2 h-4 w-4" />
-                    Export
-                  </Button>
-                </div>
-              }
-            />
+          <div className="bg-background/20 backdrop-blur-sm p-4 rounded-xl w-[90%] mx-auto h-[70%] flex  pt-9 md:pt-15">
+            <DataTable data={data} columns={columns} totalRows={data.length} />
           </div>
-          {/* </div> */}
         </section>
       </main>
       <Footer />

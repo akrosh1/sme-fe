@@ -1,21 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  useCreateResource,
-  useDeleteResource,
-  useResourceList,
-  useUpdateResource,
-} from '@/hooks/useAPIManagement';
+import { useDeleteResource, useResourceList } from '@/hooks/useAPIManagement';
 import { QueryClient } from '@tanstack/react-query';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useRouter } from 'next/navigation';
@@ -58,7 +44,6 @@ const DEFAULT_MODAL_STATE: ModalState = {
 
 const RolesList = () => {
   const [modalState, setModalState] = useState<ModalState>(DEFAULT_MODAL_STATE);
-  const [roleName, setRoleName] = useState('');
   const queryClient = new QueryClient();
   const router = useRouter();
 
@@ -74,22 +59,6 @@ const RolesList = () => {
     defaultQuery: { pageIndex: 0, pageSize: 10, search: '' },
   });
 
-  // const handleEdit = useCallback(
-  //   (id: string) => {
-  //     const roleToEdit = cmsData?.results.find((role) => role.id === id);
-  //     if (roleToEdit) {
-  //       setRoleName(roleToEdit.name);
-  //       setModalState({
-  //         type: 'edit',
-  //         cmsId: id,
-  //         open: true,
-  //         roleData: roleToEdit,
-  //       });
-  //     }
-  //   },
-  //   [cmsData?.results],
-  // );
-
   const handleDeleteClick = useCallback((id: string) => {
     setModalState({ type: 'delete', cmsId: id, open: true });
   }, []);
@@ -103,85 +72,31 @@ const RolesList = () => {
     }
   }, [modalState]);
 
+  const handleModalClose = useCallback(() => {
+    setModalState(DEFAULT_MODAL_STATE);
+  }, []);
+
+  const handleAdd = () => {
+    router.push(`/roles/add-permissions`);
+  };
+
   const handleEdit = useCallback(
     (id: string) => {
-      router.push(`/roles/add-permission?id=${id}`);
+      router.push(`/roles/add-permissions?id=${id}`);
     },
     [router],
   );
-  const handleAdd = useCallback(() => {
-    router.push(`/roles/add-permission`);
-  }, [router]);
 
-  const { mutate: deleteCMS, isPending: isDeleting } = useDeleteResource<Post>(
-    `user-groups`,
-    {
-      onSuccess: () => {
-        toast.success('Role deleted successfully');
-        setModalState(DEFAULT_MODAL_STATE);
-        queryClient.invalidateQueries({ queryKey: ['user-groups'] });
-      },
-      onError: (error) => {
-        toast.error(error?.message || 'Failed to delete role');
-      },
+  const { mutate: deleteCMS } = useDeleteResource<Post>(`user-groups`, {
+    onSuccess: () => {
+      toast.success('Role deleted successfully');
+      setModalState(DEFAULT_MODAL_STATE);
+      queryClient.invalidateQueries({ queryKey: ['user-groups'] });
     },
-  );
-
-  const { mutate: createRole, isPending: isCreating } = useCreateResource<Post>(
-    'user-groups',
-    {
-      onSuccess: () => {
-        toast.success('Role created successfully');
-        setModalState(DEFAULT_MODAL_STATE);
-        setRoleName('');
-        queryClient.invalidateQueries({ queryKey: ['user-groups'] });
-      },
-      onError: (error) => {
-        toast.error(error?.message || 'Failed to create role');
-      },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to delete role');
     },
-  );
-
-  const { mutate: updateRole, isPending: isUpdating } = useUpdateResource<Post>(
-    'user-groups',
-    {
-      onSuccess: () => {
-        toast.success('Role updated successfully');
-        setModalState(DEFAULT_MODAL_STATE);
-        setRoleName('');
-        queryClient.invalidateQueries({ queryKey: ['user-groups'] });
-      },
-      onError: (error) => {
-        toast.error(error?.message || 'Failed to update role');
-      },
-    },
-  );
-
-  const handleAddModalOpen = () => {
-    setRoleName('');
-    setModalState({ type: 'add', cmsId: null, open: true });
-  };
-
-  const handleModalClose = () => {
-    setModalState(DEFAULT_MODAL_STATE);
-    setRoleName('');
-  };
-
-  const handleSaveRole = () => {
-    if (!roleName.trim()) {
-      toast.error('Role name is required');
-      return;
-    }
-
-    if (modalState.type === 'add') {
-      createRole({ name: roleName });
-    } else if (modalState.type === 'edit' && modalState.cmsId) {
-      updateRole({
-        id: modalState.cmsId,
-        name: roleName,
-      });
-    }
-  };
+  });
 
   const columns = useMemo<ColumnDef<Post>[]>(
     () => [
@@ -269,45 +184,6 @@ const RolesList = () => {
         itemsPerPage={pageSize}
         currentPage={pageIndex + 1}
       />
-
-      {/* Role Form Modal */}
-      <Dialog
-        open={modalState.type === 'add' || modalState.type === 'edit'}
-        onOpenChange={handleModalClose}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>
-              {modalState.type === 'add' ? 'Add New Role' : 'Edit Role'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="roleName" className="text-right">
-                Role Name
-              </Label>
-              <Input
-                id="roleName"
-                value={roleName}
-                onChange={(e) => setRoleName(e.target.value)}
-                className="col-span-3"
-                placeholder="Enter role name"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleModalClose}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSaveRole}
-              disabled={isCreating || isUpdating || !roleName.trim()}
-            >
-              {isCreating || isUpdating ? 'Saving...' : 'Save'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal

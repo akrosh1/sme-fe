@@ -45,7 +45,6 @@ export function DataTable<TData>({
   onPageSizeChange,
   totalRows = 0,
 }: DataTableProps<TData>) {
-  console.log('🚀 ~ totalRows:>>', totalRows);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -119,7 +118,7 @@ export function DataTable<TData>({
   }, [pagination.pageIndex, itemsPerPage, totalRows, table]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
       <div className="rounded-lg border border-accent overflow-hidden w-full">
         <Table>
           <TableHeader>
@@ -146,7 +145,7 @@ export function DataTable<TData>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className="p-4 max-w-[300px] overflow-hidden text-ellipsis whitespace-nowrap"
+                      className="max-w-[300px] overflow-hidden text-ellipsis whitespace-nowrap"
                       style={{
                         minWidth: cell.column.columnDef.minSize,
                         // @ts-expect-error: columnDef.minWidth might be undefined in certain cases

@@ -30,7 +30,9 @@ export default function DashboardLayout({
       <Sidebar />
       <ScrollArea className="h-svh w-full overflow-hidden">
         <Header />
-        <main className="flex-1 p-4 pb-5>">{children}</main>
+        <main className="flex-1 py-6 contenair mx-auto max-w-7xl px-4 sm:px-6 lg:px-8>">
+          {children}
+        </main>
       </ScrollArea>
     </div>
   );

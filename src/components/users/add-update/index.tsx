@@ -1,18 +1,14 @@
 'use client';
 
-import SelectComponent from '@/components/common/form/selectComponent';
+import { FormElement } from '@/components/common/form/formElement';
 import PageHeader from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
+import { Form } from '@/components/ui/form';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { useCreateResource, useUpdateResource } from '@/hooks/useAPIManagement';
+  useCreateResource,
+  useResourceList,
+  useUpdateResource,
+} from '@/hooks/useAPIManagement';
 import useFetch from '@/hooks/useFetch';
 import { DevTool } from '@hookform/devtools';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,8 +19,6 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
-
-export const userRoles = ['ADMIN', 'EDITOR', 'USER'] as const;
 
 export const userFormSchema = z.object({
   id: z.number().optional(),
@@ -39,13 +33,20 @@ export const userFormSchema = z.object({
     .string()
     .min(6, 'Password must be at least 6 characters')
     .optional(),
-  role: z.enum(userRoles),
+  role: z.string(),
   is_active: z.union([z.boolean(), z.string()]),
 });
 
 export type UserFormValues = z.infer<typeof userFormSchema>;
-export type UserRole = UserFormValues['role'];
-export type UserStatus = UserFormValues['is_active'];
+
+interface ICMSGetResponse {
+  results: [
+    {
+      id: number;
+      name: string;
+    },
+  ];
+}
 
 export function UserForm() {
   const searchParams = useSearchParams();
@@ -64,6 +65,18 @@ export function UserForm() {
     select: (data: { data: UserFormValues }) => data.data,
   });
 
+  const { data: cmsData, isLoading: isLoadingCms } =
+    useResourceList<ICMSGetResponse>('user-groups', {
+      defaultQuery: { pageSize: 1000 },
+    });
+
+  const rolesNames = cmsData?.results.map((role) => {
+    return {
+      value: role.id.toString(),
+      label: role.name,
+    };
+  });
+
   const initialValues: UserFormValues = {
     id: user?.id || 0,
     first_name: user?.first_name || '',
@@ -71,7 +84,7 @@ export function UserForm() {
     last_name: user?.last_name || '',
     email: user?.email || '',
     password: user?.password || '',
-    role: user?.role || 'USER',
+    role: user?.role || '',
     is_active: user?.is_active ? 'true' : 'false',
   };
 
@@ -145,115 +158,27 @@ export function UserForm() {
       >
         <PageHeader title="Users" actionText="Back" actionPath="/users" />
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="first_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="middle_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Middle Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="last_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="john@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl aria-autocomplete={'none'}>
-                  <Input type="password" placeholder="password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
+          <FormElement type="text" name="first_name" label="First Name" />
+          <FormElement type="text" name="middle_name" label="Middle Name" />
+          <FormElement type="text" name="last_name" label="Last Name" />
+          <FormElement type="email" name="email" label="Email" />
+          <FormElement type="password" name="password" label="Password" />
+          <FormElement
+            type="select"
             name="role"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Role</FormLabel>
-                <SelectComponent
-                  options={[
-                    { value: 'ADMIN', label: 'Admin' },
-                    { value: 'EDITOR', label: 'Editor' },
-                    { value: 'USER', label: 'User' },
-                  ]}
-                  placeholder="Select a role"
-                  onValueChange={field.onChange}
-                  value={field.value}
-                />
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Role"
+            value={user?.role.toString() || ''}
+            options={rolesNames || []}
           />
-
-          <FormField
-            control={form.control}
+          <FormElement
+            type="select"
             name="is_active"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status</FormLabel>
-                <SelectComponent
-                  options={[
-                    { value: 'true', label: 'Active' },
-                    { value: 'false', label: 'Inactive' },
-                  ]}
-                  placeholder="Select status"
-                  onValueChange={(value) => field.onChange(value === 'true')}
-                  value={field.value ? 'true' : 'false'}
-                />
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Status"
+            value={user?.is_active ? 'true' : 'false'}
+            options={[
+              { value: 'true', label: 'Active' },
+              { value: 'false', label: 'Inactive' },
+            ]}
           />
         </div>
 
