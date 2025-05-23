@@ -1,5 +1,5 @@
 .tiptap {
-  min-height: 100px;
+  min-height: 170px;
 }
 
 .tiptap :first-child {
@@ -38,6 +38,10 @@
   color: #999;
   pointer-events: none;
   height: 0;
+}
+
+.prose .tiptap {
+  outline: none !important;
 }
 
 /* heading Styles */

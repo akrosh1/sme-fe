@@ -17,6 +17,7 @@ import {
   FileCog,
   LayoutDashboardIcon,
   Menu,
+  NotebookPen,
   SettingsIcon,
   ShieldUser,
   UsersIcon,
@@ -69,6 +70,12 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     label: 'CMS',
     icon: <FileCog />,
     route: '/cms',
+    hasAccess: true,
+  },
+  {
+    label: 'Articles',
+    icon: <NotebookPen />,
+    route: '/articles',
     hasAccess: true,
   },
   {

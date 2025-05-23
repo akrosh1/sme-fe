@@ -45,6 +45,7 @@ type FormElementProps = {
     onChange?: (value: string) => void;
     placeholder?: string;
   };
+  file: React.InputHTMLAttributes<HTMLInputElement>;
   checkbox: {
     checked?: boolean;
     onCheckedChange?: (checked: boolean) => void;
@@ -334,6 +335,22 @@ export function FormElement<T extends keyof FormElementProps>({
         return renderDateInput();
       case 'phone':
         return renderPhoneInput();
+      case 'file':
+        return (
+          <Controller
+            control={formContext.control}
+            name={name}
+            render={({ field }) => (
+              <Input
+                type="file"
+                onChange={(f) => field.onChange(f)}
+                disabled={disabled}
+                className={commonProps.className}
+                {...(rest as FormElementProps['file'])}
+              />
+            )}
+          />
+        );
       case 'currency':
         return (
           <Controller
