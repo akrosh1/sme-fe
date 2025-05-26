@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { useResourceList, useUpdateResource } from '@/hooks/useAPIManagement';
 import { cn } from '@/lib/utils';
+import { clearObject } from '@/utils/objectUtils';
 import upload, { UploadResponse } from '@/utils/uploadFile';
 import { FormElement } from '../common/form/formElement';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -22,12 +23,6 @@ const profileFormSchema = z.object({
     .string()
     .email('Invalid email address')
     .max(254, 'Email must be at most 254 characters')
-    .optional()
-    .or(z.literal('')),
-  password: z
-    .string()
-    .min(5, 'Password must be at least 5 characters')
-    .max(50, 'Password cannot exceed 50 characters')
     .optional()
     .or(z.literal('')),
   image: z
@@ -80,7 +75,6 @@ interface IProfileResponse {
   gender: string;
   date_of_birth: string;
   nationality: string;
-  password: string;
   image: string;
 }
 
@@ -118,7 +112,6 @@ export function ProfileForm({
       last_name: profile?.last_name || '',
       fullname: profile?.fullname || '',
       phone_number: profile?.phone_number || '',
-      password: profile?.password || '',
       date_of_birth: profile?.date_of_birth || '',
       nationality: profile?.nationality || '',
     }),
@@ -148,7 +141,7 @@ export function ProfileForm({
             ? new Date(date_of_birth).toISOString().split('T')[0]
             : '',
         };
-        await updateProfile(newData);
+        await updateProfile(clearObject(newData));
       } catch (error) {
         if (error instanceof z.ZodError) {
           console.error('Validation errors:', error.errors);
@@ -288,14 +281,6 @@ export function ProfileForm({
                         name="email"
                         label="Email"
                         disabled={!isEditing}
-                      />
-                      <FormElement
-                        type="password"
-                        name="password"
-                        label="Password"
-                        disabled={!isEditing}
-                        autoComplete={isEditing ? 'new-password' : 'off'}
-                        showEyeIcon={isEditing}
                       />
                       <FormElement
                         type="text"

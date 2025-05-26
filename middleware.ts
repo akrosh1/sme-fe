@@ -1,19 +1,3 @@
-// import { NextRequest, NextResponse } from 'next/server';
-
-// export function middleware(request: NextRequest) {
-//   const accessToken = request.cookies.get('access')?.value;
-
-//   if (request.nextUrl.pathname.startsWith('/dashboard') && !accessToken) {
-//     return NextResponse.redirect(new URL('/login', request.url));
-//   }
-
-//   return NextResponse.next();
-// }
-
-// export const config = {
-//   matcher: ['/dashboard/:path*'],
-// };
-
 import { jwtDecode } from 'jwt-decode';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -46,7 +30,7 @@ export function middleware(request: NextRequest) {
     try {
       const decoded = jwtDecode<DecodedToken>(token);
       const currentTime = Math.floor(Date.now() / 1000);
-      return decoded.exp > currentTime; // Check if token is not expired
+      return decoded.exp > currentTime;
     } catch (error) {
       console.error('Invalid token:', error);
       return false;
@@ -58,7 +42,7 @@ export function middleware(request: NextRequest) {
     if (!accessToken || !isTokenValid(accessToken)) {
       // Redirect to login if no valid token
       const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname); // Optional: Pass redirect URL
+      loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
   }

@@ -1,4 +1,5 @@
 'use client';
+
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -8,6 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import useFilter, { IUseFilterOptions } from '@/hooks/useFilter';
+import { SortParams } from '@/interface/table.interface';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -27,6 +30,7 @@ import { DataTableColumnHeader } from './dataTableColumnHeader';
 interface DataTableProps<TData> {
   columns: ColumnDef<TData>[];
   data: TData[];
+  filterOptions?: IUseFilterOptions<SortParams>;
   itemsPerPage?: number;
   isPagination?: boolean;
   currentPage?: number;
@@ -38,6 +42,7 @@ interface DataTableProps<TData> {
 export function DataTable<TData>({
   columns,
   data,
+  filterOptions,
   itemsPerPage = 10,
   currentPage = 1,
   isPagination = true,
@@ -51,6 +56,10 @@ export function DataTable<TData>({
     pageIndex: currentPage - 1,
     pageSize: itemsPerPage,
   });
+
+  const { setFilters } = useFilter<
+    TData & PaginationState & SortParams & { offset?: number; limit?: number }
+  >(filterOptions as IUseFilterOptions<TData & PaginationState & SortParams>);
 
   useEffect(() => {
     setPagination({ pageIndex: currentPage - 1, pageSize: itemsPerPage });
@@ -67,42 +76,52 @@ export function DataTable<TData>({
     onPaginationChange: (updater) => {
       const newPagination =
         typeof updater === 'function' ? updater(pagination) : updater;
+
       setPagination(newPagination);
       onPageChange?.(newPagination.pageIndex + 1);
       if (newPagination.pageSize !== pagination.pageSize) {
         onPageSizeChange?.(newPagination.pageSize);
       }
+
+      setFilters({
+        ...filterOptions?.initialState,
+        offset: newPagination.pageIndex * newPagination.pageSize,
+        limit: newPagination.pageSize,
+      });
     },
     state: { sorting, columnFilters, pagination },
     manualPagination: true,
-    pageCount: Math.ceil(totalRows / itemsPerPage) || 1,
+    pageCount: Math.ceil(totalRows / pagination.pageSize) || 1,
   });
 
   const paginationRange = useMemo(() => {
     const totalPageCount = table.getPageCount();
-    const currentPage = pagination.pageIndex + 1;
+    const current = pagination.pageIndex + 1;
     const siblingCount = 1;
 
     if (totalPageCount <= 5) {
       return Array.from({ length: totalPageCount }, (_, i) => i + 1);
     }
 
-    const leftSibling = Math.max(currentPage - siblingCount, 1);
-    const rightSibling = Math.min(currentPage + siblingCount, totalPageCount);
+    const leftSibling = Math.max(current - siblingCount, 1);
+    const rightSibling = Math.min(current + siblingCount, totalPageCount);
     const showLeftDots = leftSibling > 2;
     const showRightDots = rightSibling < totalPageCount - 1;
 
     if (!showLeftDots && showRightDots) {
-      const leftRange = Array.from({ length: 3 }, (_, i) => i + 1);
-      return [...leftRange, '...', totalPageCount];
+      return [
+        ...Array.from({ length: 3 }, (_, i) => i + 1),
+        '...',
+        totalPageCount,
+      ];
     }
 
     if (showLeftDots && !showRightDots) {
-      const rightRange = Array.from(
-        { length: 3 },
-        (_, i) => totalPageCount - 2 + i,
-      );
-      return [1, '...', ...rightRange];
+      return [
+        1,
+        '...',
+        ...Array.from({ length: 3 }, (_, i) => totalPageCount - 2 + i),
+      ];
     }
 
     return [
@@ -115,7 +134,7 @@ export function DataTable<TData>({
       ...(showRightDots ? ['...'] : []),
       totalPageCount,
     ];
-  }, [pagination.pageIndex, itemsPerPage, totalRows, table]);
+  }, [pagination.pageIndex, pagination.pageSize, totalRows]);
 
   return (
     <div className="space-y-4 w-full">
@@ -126,7 +145,7 @@ export function DataTable<TData>({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
-                    {header.isPlaceholder ? null : (
+                    {!header.isPlaceholder && (
                       <DataTableColumnHeader header={header} />
                     )}
                   </TableHead>
@@ -135,7 +154,7 @@ export function DataTable<TData>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.length ? (
+            {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -180,6 +199,7 @@ export function DataTable<TData>({
           </TableBody>
         </Table>
       </div>
+
       {isPagination && (
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
@@ -193,7 +213,7 @@ export function DataTable<TData>({
               </span>
               <SelectComponent
                 variant="standard"
-                value={itemsPerPage.toString()}
+                value={pagination.pageSize.toString()}
                 onValueChange={(value) => table.setPageSize(Number(value))}
                 options={[
                   { label: '5', value: '5' },
@@ -203,6 +223,7 @@ export function DataTable<TData>({
               />
             </div>
           </div>
+
           <div className="flex items-center space-x-2">
             <Button
               variant="ghost"
@@ -224,7 +245,9 @@ export function DataTable<TData>({
               ) : (
                 <Button
                   key={page}
-                  variant={page === currentPage ? 'default' : 'outline'}
+                  variant={
+                    page === pagination.pageIndex + 1 ? 'default' : 'outline'
+                  }
                   size="sm"
                   onClick={() => table.setPageIndex(Number(page) - 1)}
                   aria-label={`Go to page ${page}`}

@@ -1,6 +1,5 @@
 'use client';
 
-import { IResponse } from '@/interface/api/api.interface';
 import queryGenerator from '@/utils/queryGenerator';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
@@ -12,7 +11,7 @@ import useFilter, { IUseFilterOptions } from './useFilter';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 interface PaginatedResponse<T> {
   data: T;
-  total: number;
+  count: number;
   page: number;
   pageSize: number;
 }
@@ -53,9 +52,9 @@ export const useResourceList = <T>(
     {
       enabled: !!resource && true,
       // ts-expect-error will be fixed later
-      onError: (error: IResponse<PaginatedResponse<T>>) => {
+      onError: (error: AxiosError) => {
         toast.error(
-          `Failed to fetch ${resource}: ${error?.error || 'Unknown error'}`,
+          `Failed to fetch ${resource}: ${error?.message || 'Unknown error'}`,
         );
       },
     },
@@ -65,7 +64,7 @@ export const useResourceList = <T>(
   return {
     ...query,
     data: query.data?.data,
-    total: query.data?.total,
+    total: query.data?.data?.count,
     page: query.data?.page,
     pageSize: query.data?.pageSize,
     filters,
@@ -165,6 +164,7 @@ export const useResource = <T>(
     'get',
     {
       enabled: !!id,
+      // @ts-expect-error will be fixed later
       onError: (error: AxiosError) => {
         console.error(
           `Failed to fetch ${resource} with ID ${id}:`,
