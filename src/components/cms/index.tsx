@@ -194,6 +194,7 @@ const CMSList = () => {
         totalRows={cmsData?.count || 0}
         onPageChange={handlePageChange}
         onPageSizeChange={handleRowsPerPageChange}
+        filterOptions={{}}
         itemsPerPage={pageSize}
         currentPage={pageIndex + 1}
       />

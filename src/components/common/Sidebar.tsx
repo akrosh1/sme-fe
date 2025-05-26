@@ -19,6 +19,7 @@ import {
   Menu,
   NotebookPen,
   SettingsIcon,
+  Shapes,
   ShieldUser,
   UsersIcon,
 } from 'lucide-react';
@@ -76,6 +77,12 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     label: 'Articles',
     icon: <NotebookPen />,
     route: '/articles',
+    hasAccess: true,
+  },
+  {
+    label: 'Categories',
+    icon: <Shapes />,
+    route: '/categories',
     hasAccess: true,
   },
   {

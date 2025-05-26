@@ -180,6 +180,7 @@ const RolesList = () => {
         key={Math.random()}
         totalRows={cmsData?.count || 0}
         onPageChange={handlePageChange}
+        filterOptions={{}}
         onPageSizeChange={handleRowsPerPageChange}
         itemsPerPage={pageSize}
         currentPage={pageIndex + 1}
