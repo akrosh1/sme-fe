@@ -88,7 +88,6 @@ export const useDeleteResource = <T>(
     {
       ...options,
       onSuccess: (data, variables, context) => {
-        console.log(`${resource} deleted successfully`);
         queryClient.invalidateQueries({ queryKey: [resource] });
         options?.onSuccess?.(data, variables, context);
       },
@@ -113,7 +112,6 @@ export const useUpdateResource = <T>(
     {
       ...options,
       onSuccess: (data, variables, context) => {
-        console.log(`${resource} updated successfully`);
         queryClient.invalidateQueries({ queryKey: [resource] });
         queryClient.invalidateQueries({ queryKey: [resource, variables.id] });
         options?.onSuccess?.(data, variables, context);
@@ -126,10 +124,10 @@ export const useUpdateResource = <T>(
   );
 };
 
-// Generic hook for creating a resource (POST)
+// // Generic hook for creating a resource (POST)
 export const useCreateResource = <T>(
   resource: string,
-  options?: FetchOptions<'post', Partial<T>, T>,
+  options?: FetchOptions<'post', Partial<T>, T> & { queryKey?: readonly any[] },
 ) => {
   const queryClient = useQueryClient();
 
@@ -139,8 +137,9 @@ export const useCreateResource = <T>(
     {
       ...options,
       onSuccess: (data, variables, context) => {
-        console.log(`${resource} created successfully`);
-        queryClient.invalidateQueries({ queryKey: [resource] });
+        queryClient.invalidateQueries({
+          queryKey: options?.queryKey ?? [resource],
+        });
         options?.onSuccess?.(data, variables, context);
       },
       onError: (error, variables, context) => {

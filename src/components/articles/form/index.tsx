@@ -53,9 +53,8 @@ export function ArticleForm() {
   const router = useRouter();
   const articleId = searchParams.get('id');
   const [uploadedFiles, setUploadedFiles] = useState<UploadResponse[]>([]);
-  console.log('🚀 ~ ArticleForm ~ uploadedFiles:', uploadedFiles);
 
-  const { data: articleData, isLoading } = useFetch<
+  const { data: articleData, refetch } = useFetch<
     'get',
     { id: string },
     ArticleFormValues
@@ -115,14 +114,12 @@ export function ArticleForm() {
     }
   }, [uploadedFiles]);
 
-  console.log('🚀 ~ ArticleForm ~ form:', form.getValues());
-  console.log('🚀 ~ ArticleForm ~ errors:', form.formState.errors);
-
   const { mutate: createArticle, isPending: isCreating } =
     useCreateResource<ArticleFormValues>('articles/', {
       onSuccess: () => {
         toast.success('Article created successfully');
         router.push('/articles');
+        refetch();
       },
       onError: (error) => {
         toast.error(error?.message || 'Failed to create article');
@@ -134,6 +131,7 @@ export function ArticleForm() {
       onSuccess: () => {
         toast.success('Article updated successfully');
         router.push('/articles');
+        refetch();
       },
       onError: (error) => {
         toast.error(error?.message || 'Failed to update article');
