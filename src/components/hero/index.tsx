@@ -113,7 +113,12 @@ export function HomeSection() {
           </div>
           <FeaturesSection />
           <div className="bg-background/20 backdrop-blur-sm p-4 rounded-xl w-[90%] mx-auto h-[70%] flex  pt-9 md:pt-15">
-            <DataTable data={data} columns={columns} totalRows={data.length} />
+            <DataTable
+              data={data}
+              columns={columns}
+              totalRows={data.length}
+              filterOptions={{}}
+            />
           </div>
         </section>
       </main>

@@ -24,7 +24,7 @@ function ArticleCard({
   authorImage,
 }: ArticleCardProps) {
   return (
-    <Link href={`/articles/view/page?articleId=${slug}`} className="group">
+    <Link href={`/articles/view/page?id=${slug}`} className="group">
       <div className="space-y-3">
         <div className="relative h-48 rounded-lg overflow-hidden border border-gray-800 group-hover:border-purple-500/50 transition-colors">
           <Image

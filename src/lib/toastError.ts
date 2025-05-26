@@ -8,7 +8,7 @@ function getErrorMessage(error: object) {
     if (typeof value === 'string') {
       // Handle string error messages
       toast({
-        variant: 'error', // Changed to 'error' to match your toast implementation
+        variant: 'destructive',
         title: normalizeCamelCase(key),
         description: value,
       });
@@ -17,7 +17,7 @@ function getErrorMessage(error: object) {
       value.forEach((err) => {
         if (typeof err === 'string') {
           toast({
-            variant: 'error',
+            variant: 'destructive',
             title: normalizeCamelCase(key),
             description: err,
           });
@@ -29,7 +29,7 @@ function getErrorMessage(error: object) {
     } else {
       // Handle generic errors
       toast({
-        variant: 'error',
+        variant: 'destructive',
         title: 'Error',
         description: 'Something went wrong',
       });
@@ -44,7 +44,7 @@ export default function toastError(error: IResponseError | undefined | null) {
   if (typeof error === 'string') {
     // if (process.env.NODE_ENV === 'development') {
     toast({
-      variant: 'error',
+      variant: 'destructive',
       title: 'Error',
       description: error,
     });
