@@ -123,7 +123,7 @@ const UsersTable = () => {
         accessorKey: 'gender',
         header: 'Gender',
         cell: ({ row }) => (
-          <Badge variant={'outline'}>
+          <Badge variant={'outline'} className="bg-">
             {capitalize(row.getValue('gender'))}
           </Badge>
         ),
