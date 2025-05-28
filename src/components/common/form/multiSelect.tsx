@@ -8,24 +8,22 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Command as CommandPrimitive } from 'cmdk';
-import { X } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import * as React from 'react';
 
-// Define the Option interface
 interface Option {
   value: string;
   label: string;
 }
 
-// Define component props interface
 interface FancyMultiSelectProps {
   name?: string;
   className?: string;
   label?: string;
-  value?: string[]; // Array of selected values
+  value?: string[];
   options: Option[];
   placeholder?: string;
-  onChange?: (value: string[]) => void; // Callback for value changes
+  onChange?: (value: string[]) => void;
 }
 
 export function FancyMultiSelect({
@@ -50,14 +48,24 @@ export function FancyMultiSelect({
     setSelected(newSelected);
   }, [value, options]);
 
-  // Notify parent component of selection changes
-  React.useEffect(() => {
-    onChange?.(selected.map((item) => item.value));
-  }, [selected, onChange]);
+  const handleUnselect = React.useCallback(
+    (framework: Option) => {
+      const newSelected = selected.filter((s) => s.value !== framework.value);
+      setSelected(newSelected);
+      onChange?.(newSelected.map((item) => item.value)); // Call onChange directly
+    },
+    [selected, onChange],
+  );
 
-  const handleUnselect = React.useCallback((framework: Option) => {
-    setSelected((prev) => prev.filter((s) => s.value !== framework.value));
-  }, []);
+  const handleSelect = React.useCallback(
+    (framework: Option) => {
+      const newSelected = [...selected, framework];
+      setSelected(newSelected);
+      setInputValue('');
+      onChange?.(newSelected.map((item) => item.value)); // Call onChange directly
+    },
+    [selected, onChange],
+  );
 
   const handleKeyDown = React.useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -65,11 +73,12 @@ export function FancyMultiSelect({
       if (input) {
         if (e.key === 'Delete' || e.key === 'Backspace') {
           if (input.value === '') {
-            setSelected((prev) => {
-              const newSelected = [...prev];
-              newSelected.pop();
-              return newSelected;
-            });
+            const newSelected = [...selected];
+            const removed = newSelected.pop();
+            setSelected(newSelected);
+            if (removed) {
+              onChange?.(newSelected.map((item) => item.value)); // Call onChange on delete
+            }
           }
         }
         if (e.key === 'Escape') {
@@ -77,7 +86,7 @@ export function FancyMultiSelect({
         }
       }
     },
-    [],
+    [selected, onChange],
   );
 
   const selectables = options.filter(
@@ -87,7 +96,7 @@ export function FancyMultiSelect({
   return (
     <div className={className}>
       {label && (
-        <label className="mb-1 block text-sm font-medium text-foreground">
+        <label className="mb-1 block w-fit text-sm font-medium text-foreground">
           {label}
         </label>
       )}
@@ -95,8 +104,8 @@ export function FancyMultiSelect({
         onKeyDown={handleKeyDown}
         className="overflow-visible bg-transparent"
       >
-        <div className="group rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-          <div className="flex flex-wrap gap-1">
+        <div className="group rounded-md border border-input px-3 py-1.75 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+          <div className="flex flex-wrap gap-1 items-center relative pr-4">
             {selected.map((framework) => (
               <Badge key={framework.value} variant="secondary">
                 {framework.label}
@@ -114,7 +123,7 @@ export function FancyMultiSelect({
                   onClick={() => handleUnselect(framework)}
                   type="button"
                 >
-                  <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                  <X className="h-3 w-3  text-muted-foreground hover:text-foreground" />
                 </button>
               </Badge>
             ))}
@@ -126,14 +135,15 @@ export function FancyMultiSelect({
               onBlur={() => setOpen(false)}
               onFocus={() => setOpen(true)}
               placeholder={placeholder}
-              className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+              className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground placeholder:w-fit"
             />
+            <ChevronDown className="ml-1 h-4 w-4 absolute right-0 top-1 shrink-0 opacity-50" />
           </div>
         </div>
-        <div className="relative mt-2">
+        <div className="relative">
           <CommandList>
             {open && selectables.length > 0 && (
-              <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
+              <div className="absolute mt-2 top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
                 <CommandGroup className="h-full overflow-auto">
                   {selectables.map((framework) => (
                     <CommandItem
@@ -142,10 +152,7 @@ export function FancyMultiSelect({
                         e.preventDefault();
                         e.stopPropagation();
                       }}
-                      onSelect={() => {
-                        setInputValue('');
-                        setSelected((prev) => [...prev, framework]);
-                      }}
+                      onSelect={() => handleSelect(framework)}
                       className="cursor-pointer"
                     >
                       {framework.label}

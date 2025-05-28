@@ -34,6 +34,7 @@ const PageHeader: FC<PageHeaderProps> = ({
       {actionPath && (
         <Button
           variant={'outline'}
+          type="button"
           className="btn btn-primary cursor-pointer"
           onClick={() => router.push(actionPath)}
         >

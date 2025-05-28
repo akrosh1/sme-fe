@@ -1,9 +1,5 @@
 'use client';
 
-import { CalendarIcon, Eye, EyeOff } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
-import { Controller, useFormContext } from 'react-hook-form';
-
 import { CurrencyInput } from '@/components/common/form/currencyInput';
 import { PhoneInput } from '@/components/common/form/phoneInput';
 import { Button } from '@/components/ui/button';
@@ -26,6 +22,10 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { CalendarIcon, Eye, EyeOff } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { Controller, useFormContext } from 'react-hook-form';
+import { FancyMultiSelect } from './multiSelect';
 
 type FormElementProps = {
   text: React.InputHTMLAttributes<HTMLInputElement>;
@@ -40,9 +40,15 @@ type FormElementProps = {
     showEyeIcon?: boolean;
   };
   select: {
-    value: string | (() => string | undefined) | undefined;
+    value?: string | (() => string | undefined);
     options: { value: string; label: string }[];
     onChange?: (value: string) => void;
+    placeholder?: string;
+  };
+  multiSelect: {
+    value?: string[];
+    options: { value: string; label: string }[];
+    onChange?: (value: string[]) => void;
     placeholder?: string;
   };
   file: React.InputHTMLAttributes<HTMLInputElement>;
@@ -172,18 +178,18 @@ export function FormElement<T extends keyof FormElementProps>({
                 <SelectValue placeholder={placeholder} />
               </SelectTrigger>
               <SelectContent>
-                {options &&
-                  options?.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
+                {options?.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           )}
         />
       );
     }
+    return null; // Uncontrolled version can be added if needed
   }, [
     isFormControlled,
     formContext?.control,
@@ -235,6 +241,7 @@ export function FormElement<T extends keyof FormElementProps>({
         />
       );
     }
+    return null; // Uncontrolled version can be added if needed
   }, [
     isFormControlled,
     formContext?.control,
@@ -265,12 +272,44 @@ export function FormElement<T extends keyof FormElementProps>({
         />
       );
     }
-    // Uncontrolled version would go here
+    return null;
   }, [
     isFormControlled,
     formContext?.control,
     name,
     disabled,
+    commonProps.className,
+    rest,
+  ]);
+
+  const renderMultiSelectInput = useCallback(() => {
+    const { options, placeholder, ...multiSelectProps } =
+      rest as unknown as FormElementProps['multiSelect'];
+
+    if (isFormControlled) {
+      return (
+        <Controller
+          control={formContext.control}
+          name={name}
+          render={({ field }) => (
+            <FancyMultiSelect
+              {...multiSelectProps}
+              name={name}
+              value={field.value || []}
+              onChange={field.onChange}
+              options={options}
+              placeholder={placeholder}
+              className={commonProps.className}
+            />
+          )}
+        />
+      );
+    }
+    return null;
+  }, [
+    isFormControlled,
+    formContext?.control,
+    name,
     commonProps.className,
     rest,
   ]);
@@ -293,6 +332,8 @@ export function FormElement<T extends keyof FormElementProps>({
         return renderPasswordInput();
       case 'select':
         return renderSelectInput();
+      case 'multiSelect':
+        return renderMultiSelectInput();
       case 'checkbox':
         return (
           <Controller
@@ -387,6 +428,7 @@ export function FormElement<T extends keyof FormElementProps>({
     commonProps,
     renderPasswordInput,
     renderSelectInput,
+    renderMultiSelectInput,
     renderDateInput,
     renderPhoneInput,
   ]);
