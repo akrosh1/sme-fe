@@ -21,6 +21,7 @@ import {
   SettingsIcon,
   Shapes,
   ShieldUser,
+  UserPlus2Icon,
   UsersIcon,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -77,6 +78,12 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     label: 'Articles',
     icon: <NotebookPen />,
     route: '/articles',
+    hasAccess: true,
+  },
+  {
+    label: 'Complete Profile',
+    icon: <UserPlus2Icon />,
+    route: '/complete-profile',
     hasAccess: true,
   },
   {

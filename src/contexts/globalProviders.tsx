@@ -23,7 +23,7 @@ export function ClientWrapper({ children }: { children: ReactNode }) {
         <Toaster
           duration={3000}
           position="top-right"
-          className="z-9999 bg-white "
+          className="z-9999 bg-white"
         />
       </QueryClientProvider>
     </Provider>

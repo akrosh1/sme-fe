@@ -1,17 +1,16 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
-// import { motion } from 'framer-motion';
-import { useTheme } from 'next-themes';
+import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
 import IconBadge from '../common/IconBadge';
-// import FrostedGlassIcon from './frosted-glass-icon';
 
 interface FeatureCardProps {
   icon: ReactNode;
   title: string;
   description: string;
   accentColor?: string;
+  className?: string;
 }
 
 export default function FeatureCard({
@@ -19,21 +18,17 @@ export default function FeatureCard({
   title,
   description,
   accentColor = 'rgba(120, 120, 255, 0.5)',
+  className,
 }: FeatureCardProps) {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
-
-  // Adjust accent color opacity for dark mode
-  const adjustedAccentColor = isDark
-    ? accentColor.replace(
-        /rgba$$(\d+),\s*(\d+),\s*(\d+),\s*[\d.]+$$/,
-        'rgba($1, $2, $3, 0.3)',
-      )
-    : accentColor;
-
+  console.log('🚀 ~ icon:', icon);
   return (
     <div className="relative group h-full">
-      <Card className="h-full overflow-hidden bg-background/60 backdrop-blur-sm border transition-all duration-300 hover:shadow-lg dark:bg-background/80">
+      <Card
+        className={cn(
+          `h-full overflow-hidden bg-background/60 backdrop-blur-sm border transition-all duration-300 hover:shadow-lg dark:bg-background/80,`,
+          className,
+        )}
+      >
         <div className="p-6 h-full flex flex-col relative z-10">
           <IconBadge
             icon={icon}

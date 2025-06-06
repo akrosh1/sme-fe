@@ -1,10 +1,13 @@
 'use client';
 import type { ColumnDef } from '@tanstack/react-table';
-import Footer from '../common/Footer';
-import { DataTable } from '../common/table';
+import Link from 'next/link';
+import { Footer } from '../common/Footer';
 import { Badge } from '../ui/badge';
-import FeaturesSection from './featureSection';
+import NewsAndEvents from './newsAndEvents';
 import { PublicHeader } from './publicHeader';
+import ServicesSection from './servicesSection';
+import SmeDevelopmentStage from './smeDevelopmentStage';
+import SmeGuidelines from './smeGuidelines';
 
 // Example data type
 interface Payment {
@@ -98,28 +101,36 @@ export function HomeSection() {
     <>
       <PublicHeader />
       <main>
-        <section className="relative min-h-screen pt-32 pb-16 overflow-y-auto bg-background">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
-              Protect Your Privacy, Share What
-              <br />
-              Matters
+        <section className="relative min-h-screen overflow-y-auto mt-19">
+          <div className="flex flex-col items-center justify-center text-center py-10  bg-[#fbfcfd] h-[447px]">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
+              Empowering Small & Medium Enterprises <br /> in Koshi Province
             </h1>
-            <p className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
-              Easily crop out sensitive information on your screen during work
-              calls. Keep your focus on what you want to share while maintaining
-              full control over your privacy.
+            <p className="text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
+              Access business development resources, apply for government
+              support schemes, and grow your enterprise.
             </p>
+            <div className="flex gap-2">
+              <Link
+                href="/register"
+                className="bg-primary text-white hover:bg-primary/90 px-4 py-1 rounded-md transition-colors"
+              >
+                Register Now
+              </Link>
+              <Link
+                href="/login"
+                className="bg-white text-primary hover:bg-primary/90 px-4 py-1 border border-accent rounded-md transition-colors"
+              >
+                Learn More
+              </Link>
+            </div>
           </div>
-          <FeaturesSection />
-          <div className="bg-background/20 backdrop-blur-sm p-4 rounded-xl w-[90%] mx-auto h-[70%] flex  pt-9 md:pt-15">
-            <DataTable
-              data={data}
-              columns={columns}
-              totalRows={data.length}
-              filterOptions={{}}
-            />
-          </div>
+          {/* SME Development Stage */}
+          <SmeDevelopmentStage />
+          {/* Services */}
+          <ServicesSection />
+          <SmeGuidelines />
+          <NewsAndEvents />
         </section>
       </main>
       <Footer />
