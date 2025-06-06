@@ -91,6 +91,7 @@ export function RegisterForm({
                     Enter your details below to get started
                   </p>
                 </div>
+
                 <FormElement type="text" name="first_name" label="First Name" />
 
                 <FormElement type="text" name="last_name" label="Last Name" />
