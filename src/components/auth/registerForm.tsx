@@ -92,6 +92,7 @@ export function RegisterForm({
                   </p>
                 </div>
                 <FormElement type="text" name="first_name" label="First Name" />
+
                 <FormElement type="text" name="last_name" label="Last Name" />
                 <FormElement type="email" name="email" label="Email" />
                 <FormElement type="password" name="password" label="Password" />
